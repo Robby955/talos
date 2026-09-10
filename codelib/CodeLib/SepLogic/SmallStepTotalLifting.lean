@@ -1661,6 +1661,25 @@ Stops before any rule that needs a semantic choice, client resource, or
 non-definitional proof. -/
 syntax "wasm_twp_pures" "[" ident* "]" : tactic
 
+/-- Apply a sequence of total-WP rules to the successive main goals.
+Unlike `wasm_twp_pures`, each entry is an arbitrary term, so callers may
+supply side conditions and explicit arguments while retaining a compact
+straight-line proof. -/
+syntax "wasm_twp_chain" "[" pmTerm,* "]" : tactic
+
+macro_rules
+  | `(tactic| wasm_twp_chain []) => `(tactic| skip)
+  | `(tactic| wasm_twp_chain [$step:pmTerm]) =>
+      `(tactic| iapply $step)
+  | `(tactic| wasm_twp_chain [$step:pmTerm, $next:pmTerm]) =>
+      `(tactic|
+        (iapply $step
+         iapply $next))
+  | `(tactic| wasm_twp_chain [$step:pmTerm, $next:pmTerm, $rest:pmTerm,*]) =>
+      `(tactic|
+        (iapply $step
+         wasm_twp_chain [$next, $rest,*]))
+
 macro_rules
   | `(tactic| wasm_twp_pures []) => `(tactic| skip)
   | `(tactic| wasm_twp_pures [twp_localGet $rest:ident*]) =>
