@@ -39,6 +39,7 @@ namespace SmallStep
 inductive TraceExit where
   | returned
   | tailCall
+  | threw (tag : Nat) (arguments : List Value)
   | trapped (reason : TrapReason)
   | internalError (message : String)
 deriving Repr
@@ -377,8 +378,8 @@ private def observeLifecycle
   let state := match hostIndex? with
     | some index =>
         let state := state.emitEnter (functionRef before index) (stackValues before) true false
-        let invocation := { id := state.nextInvocation - 1, function := functionRef before index }
-        let outcome := match after.expr with
+        let invocation : Invocation := { id := state.nextInvocation - 1, function := functionRef before index }
+        let outcome : TraceExit := match after.expr with
           | .trapped reason => .trapped reason
           | _ => .returned
         state.emitExit invocation outcome (stackValues after) false
@@ -397,16 +398,26 @@ private def observeLifecycle
           | none => state
         else state
     | none => state
-  let state :=
-    if afterDepth < beforeDepth then
-      match state.invocations with
-      | invocation :: _ => state.emitExit invocation .returned
-      | [] => state
-    else state
+  -- Terminal expressions have no call stack; their apparent depth decrease
+  -- is not a normal return. Close every invocation with the terminal outcome.
   match after.expr with
   | .done values => state.closeAll .returned values
   | .trapped reason => state.closeAll (.trapped reason)
-  | .running _ => state
+  | .running _ =>
+      match kind, before.expr, state.invocations with
+      | .administrative .returnFromCall, .running thread, invocation :: _
+      | .administrative .returnFromCallCrossInstance, .running thread, invocation :: _ =>
+          -- Read the callee's results before resuming the caller, whose operand
+          -- stack also contains values unrelated to this return.
+          state.emitExit invocation .returned (thread.locals.values.take thread.resultArity)
+      | .administrative .unwindException, .running thread, invocation :: _ =>
+          if afterDepth < beforeDepth then
+            match thread.control.head?.map (fun frame : ControlFrame => frame.kind) with
+            | some (.throwing tag arguments) =>
+                state.emitExit invocation (.threw tag arguments)
+            | _ => state
+          else state
+      | _, _, _ => state
 
 private def observeTransition
     (state : TraceState) (before : Config α) (kind : StepKind)
@@ -494,6 +505,7 @@ private def function (ref : FunctionRef) : Json := Json.mkObj
 private def exitName : TraceExit → String
   | .returned => "returned"
   | .tailCall => "tail_call"
+  | .threw _ _ => "threw"
   | .trapped _ => "trapped"
   | .internalError _ => "internal_error"
 
@@ -526,6 +538,8 @@ def event : TraceEvent → Json
        ("outcome", toJson (exitName outcome)),
        ("detail", match outcome with
           | .trapped reason => toJson reason.message
+          | .threw tag arguments => Json.mkObj
+              [("tag", toJson tag), ("arguments", Json.arr (arguments.map value).toArray)]
           | .internalError message => toJson message
           | _ => Json.null),
        ("results", Json.arr (results.map value).toArray)]

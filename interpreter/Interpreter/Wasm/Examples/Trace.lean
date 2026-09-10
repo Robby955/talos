@@ -87,5 +87,48 @@ example : infiniteObserved.summary.transitions = 5 := by native_decide
 example : infiniteObserved.summary.instructions = 5 := by native_decide
 example : endedOutOfFuel infiniteObserved.events = true := by native_decide
 
+
+/-! Nested exits must describe the callee, including its outcome and only its
+own declared results, even when the caller has other operands on its stack. -/
+
+private def observeModule (m : Module) : List TraceEvent :=
+  match initConfig { module := m, host := ({} : HostEnv Unit) } 0 m.initialStore [] with
+  | .ok config => (runTraced 30 0 config).events
+  | .error _ => []
+
+private def exitRecords : List TraceEvent → List (Nat × String × List Value)
+  | [] => []
+  | .functionExit _ invocation outcome results :: rest =>
+      let label := match outcome with
+        | .returned => "returned"
+        | .trapped reason => "trapped: " ++ reason.message
+        | .threw tag _ => s!"threw: {tag}"
+        | .tailCall => "tail_call"
+        | .internalError _ => "internal_error"
+      (invocation.function.functionIndex, label, results) :: exitRecords rest
+  | _ :: rest => exitRecords rest
+
+example : exitRecords (observeModule
+    { funcs := [{ body := [.call 1] }, { body := [.call 2] },
+                { body := [.unreachable] }] }) =
+    [(2, "trapped: unreachable", []), (1, "trapped: unreachable", []),
+     (0, "trapped: unreachable", [])] := by native_decide
+
+example : exitRecords (observeModule
+    { funcs :=
+        [{ body := [.const 99, .call 1, .drop, .drop], results := [.i32] },
+         { body := [.const 7, .const 8], results := [.i32, .i32] }] }) =
+    [(1, "returned", [.i32 8, .i32 7]), (0, "returned", [.i32 99])] := by native_decide
+
+example : exitRecords (observeModule
+    { funcs := [{ body := [.call 1], results := [.i32] },
+                { body := [.const 7, .ret, .const 8], results := [.i32] }] }) =
+    [(1, "returned", [.i32 7]), (0, "returned", [.i32 7])] := by native_decide
+
+example : (exitRecords (observeModule
+    { tags := [{ params := [.i32] }]
+      funcs := [{ body := [.call 1] }, { body := [.const 7, .throwI 0] }] })).take 1 =
+    [(1, "threw: 0", [])] := by native_decide
+
 end SmallStep
 end Wasm

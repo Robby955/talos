@@ -57,6 +57,8 @@ and aggregate local/global/memory counters. Function, global, and memory events
 also retain stable runtime identities when the instantiated store provides
 them. Tracing observes the authoritative small-step machine and does not alter
 its semantic configuration or transition relation.
+Function exits retain the callee’s declared results on normal returns and
+distinguish propagated exceptions (`threw`) from terminal traps (`trapped`).
 
 See [`interpreter/samples/factorial.wat`](interpreter/samples/factorial.wat) for a minimal example module.
 
