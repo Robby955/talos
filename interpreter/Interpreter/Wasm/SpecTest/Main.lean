@@ -145,23 +145,25 @@ def observeOn (m : Module) (fuel : Nat) (x : ι) : Observation :=
   | none => errorObservation s!"export `{p.op}` cannot be entered"
 
 /-- The observation that decides an input's verdict, with the verdict: the
-original module under its fixed cap, or a candidate under the relative fuel. -/
-def evaluate (candidate : Option Module) (x : ι) : Observation × Verdict :=
+original module under its fixed cap, or a candidate under the relative fuel. The
+flag says whether a candidate's observation differs from the original's on this
+input (always `false` for the original). -/
+def evaluate (candidate : Option Module) (x : ι) : Observation × Verdict × Bool :=
   match candidate with
   | none =>
     let obs := observeOn p p.module (originalFuel o) x
-    (obs, classify shape true (p.post x) obs)
+    (obs, classify shape true (p.post x) obs, false)
   | some m =>
     let reference := observeOn p p.module (originalFuel o) x
     let obs := observeOn p m (candidateFuel reference.steps) x
-    (obs, classify shape false (p.post x) obs)
+    (obs, classify shape false (p.post x) obs, !reference.sameAs obs)
 
 /-- Greedy shrinking: repeatedly move to the first simpler input that still fails. -/
 partial def shrinkFailure (candidate : Option Module) (x : ι) (obs : Observation)
     (verdict : Verdict) (budget : Nat) : ι × Observation × Verdict × Nat :=
   if budget = 0 then (x, obs, verdict, 0) else
   let next := (Domain.shrink x).findSome? fun y =>
-    let (obs', verdict') := evaluate p shape o candidate y
+    let (obs', verdict', _) := evaluate p shape o candidate y
     if verdict'.isFail then some (y, obs', verdict') else none
   match next with
   | some (y, obs', verdict') =>
@@ -189,6 +191,9 @@ structure Tally where
   pass : Nat := 0
   /-- Passes on inputs with no simpler input (`Domain.shrink x = []`: the empty list, `(0, 0)`). -/
   trivialPass : Nat := 0
+  /-- Passes where a candidate's observation differs from the original's: the specification accepts
+  a different normal outcome (a witness that the contract is weaker than the program). -/
+  passDifferent : Nat := 0
   fail : Nat := 0
   vacuousOom : Nat := 0
   vacuousDivergent : Nat := 0
@@ -205,14 +210,17 @@ def Tally.add (t : Tally) : Verdict → Tally
 
 def Tally.json (t : Tally) : Json :=
   Json.mkObj [("inputs", toJson t.inputs), ("pass", toJson t.pass), ("fail", toJson t.fail),
-    ("trivial_pass", toJson t.trivialPass),
+    ("trivial_pass", toJson t.trivialPass), ("pass_different", toJson t.passDifferent),
     ("vacuous_oom", toJson t.vacuousOom), ("vacuous_divergent", toJson t.vacuousDivergent),
     ("out_of_fuel", toJson t.outOfFuel), ("error", toJson t.error)]
 
-/-- Count a pass on a shrink-minimal input as trivial as well. -/
-def Tally.noteTrivial (t : Tally) (verdict : Verdict) (minimal : Bool) : Tally :=
+/-- Count a pass on a shrink-minimal input as trivial, and a pass whose observation
+differs from the original's as a different pass. -/
+def Tally.noteTrivial (t : Tally) (verdict : Verdict) (minimal differs : Bool) : Tally :=
   match verdict with
-  | .pass => if minimal then { t with trivialPass := t.trivialPass + 1 } else t
+  | .pass =>
+    let t := if minimal then { t with trivialPass := t.trivialPass + 1 } else t
+    if differs then { t with passDifferent := t.passDifferent + 1 } else t
   | _ => t
 
 def configJson (o : Options) (shape : Shape) (source : String) (truncated : Bool) : Json :=
@@ -267,10 +275,10 @@ def testAll {ι : Type} [Domain ι] (p : Problem ι) (shape : Shape) (o : Option
         if (← IO.monoMsNow) - started ≥ secs * 1000 then
           truncated := true
           break
-      let (obs, verdict) := evaluate p shape o candidate x
+      let (obs, verdict, differs) := evaluate p shape o candidate x
       let minimal := (Domain.shrink x).isEmpty
-      total := (total.add verdict).noteTrivial verdict minimal
-      perFamily := perFamily.modify fam.index (fun t => (t.add verdict).noteTrivial verdict minimal)
+      total := (total.add verdict).noteTrivial verdict minimal differs
+      perFamily := perFamily.modify fam.index (fun t => (t.add verdict).noteTrivial verdict minimal differs)
       for f in obs.functions do seen := seen.insert f
       maxSteps := max maxSteps obs.steps
       if let .error message := verdict then
@@ -366,7 +374,7 @@ def testOne {ι : Type} [Domain ι] (p : Problem ι) (shape : Shape) (o : Option
   match (bytesOfHex? hex).bind p.decode? with
   | none => fail2 s!"`{hex}` is not the encoding of an input in the specification's domain"
   | some x =>
-    let (obs, verdict) := evaluate p shape o candidate x
+    let (obs, verdict, _) := evaluate p shape o candidate x
     let json := Json.mkObj
       ([ ("mode", Json.str "single")
        , ("verdict", Json.str verdict.name)
