@@ -60,7 +60,7 @@ theorem twp_load8U
   dsimp only
   iintro Hpt Htwp
   iapply twp_lift_step_no_fork
-    (@TerminalView.running_not_val α Terminal view _)
+    (view.running_not_val _)
   iintro %store %ns %obs %nt Hσ
   ihave %Hfacts : ⌜store.wasm.mem.read8 (address + offset) = byte ∧
       (address + offset).toNat < store.wasm.mem.pages * 65536⌝ $$ [Hσ Hpt]
@@ -138,7 +138,7 @@ theorem twp_load8S
       WP (Expr.running current : Expr α) @ s; E [{ Φ }] := by
   dsimp only
   iintro Hp Hw
-  iapply twp_lift_step_no_fork (@TerminalView.running_not_val α Terminal view _)
+  iapply twp_lift_step_no_fork (view.running_not_val _)
   iintro %store %ns %obs %nt Hs
   ihave %h : ⌜store.wasm.mem.read8 (address + offset) = byte ∧
       (address + offset).toNat < store.wasm.mem.pages * 65536⌝ $$ [Hs Hp]
@@ -231,7 +231,7 @@ theorem twp_store8
   dsimp only
   iintro Hpt Htwp
   iapply twp_lift_step_no_fork
-    (@TerminalView.running_not_val α Terminal view _)
+    (view.running_not_val _)
   iintro %store %ns %obs %nt Hσ
   ihave %HinBounds :
       ⌜(address + offset).toNat < store.wasm.mem.pages * 65536⌝ $$ [Hσ Hpt]
@@ -378,7 +378,7 @@ theorem twp_memorySize_framed
       s; E [{ Φ }] := by
   iintro ⟨Hruntime, HR⟩
   iapply twp_lift_step_no_fork
-    (@TerminalView.running_not_val α Terminal view _)
+    (view.running_not_val _)
   iintro %store %ns %obs %nt Hσ
   ihave %Hmodule : ⌜store.runtime.currentModule = runtimeModule⌝ $$
       [Hσ Hruntime]
@@ -440,7 +440,7 @@ theorem twp_memoryGrow_framed
       s; E [{ Φ }] := by
   iintro ⟨Hruntime, HR⟩
   iapply twp_lift_step_no_fork
-    (@TerminalView.running_not_val α Terminal view _)
+    (view.running_not_val _)
   iintro %store %ns %obs %nt Hσ
   cases hg : store.wasm.mem.grow delta
       (store.wasm.memoryCap store.runtime.currentModule 0) with
@@ -643,7 +643,7 @@ theorem twp_memoryGrow_fresh
       s; E [{ Φ }] := by
   iintro ⟨Hruntime, HR, Hfrontier, Hmeasured⟩
   iapply twp_lift_step_no_fork
-    (@TerminalView.running_not_val α Terminal view _)
+    (view.running_not_val _)
   iintro %store %ns %obs %nt Hstate
   ihave %Hmodule : ⌜store.runtime.currentModule = runtimeModule⌝ $$
       [Hstate Hruntime]
