@@ -244,6 +244,35 @@ theorem pointsTo_u64_as_bytes {hlc : HasLC} {α : Type}
     (BI.sep_emp (PROP := IProp (WasmHeapGF α))).to_eq]
   exact .rfl
 
+/-- Borrow an eight-byte word from a byte window and return a wand restoring
+the unchanged range. -/
+theorem pointsToBytes_focus_u64 {hlc : HasLC} {α : Type}
+    [WasmSmallStepGS hlc α] (memId : Nat) (base : UInt32)
+    (bytes : List UInt8) (i : Nat) (word : UInt64)
+    (hi : i + 8 ≤ bytes.length)
+    (hword : (bytes.drop i).take 8 =
+      [u64Byte word 0, u64Byte word 1, u64Byte word 2, u64Byte word 3,
+       u64Byte word 4, u64Byte word 5, u64Byte word 6, u64Byte word 7]) :
+    pointsToBytes (α := α) memId base bytes ⊢
+      (iprop% pointsTo_u64 memId (base + UInt32.ofNat i) word ∗
+        (pointsTo_u64 memId (base + UInt32.ofNat i) word -∗
+          pointsToBytes memId base bytes)) := by
+  iintro Hbytes
+  ihave ⟨Hpre, Hmid, Hpost⟩ := pointsToBytes_slice memId base bytes i 8
+    (by omega) (by simp [List.length_drop]; omega) $$ Hbytes
+  isplitl [Hmid]
+  · iapply (pointsTo_u64_as_bytes memId
+      (base + UInt32.ofNat i) word).mpr
+    irw_exact [← hword] with Hmid
+  iintro Hword
+  ihave Hmid := (pointsTo_u64_as_bytes memId
+    (base + UInt32.ofNat i) word).mp $$ Hword
+  isimp only [← hword] at Hmid
+  iapply_frame pointsToBytes_take_drop_join memId base bytes i (by omega)
+  iapply_frame pointsToBytes_take_drop_join memId
+    (base + UInt32.ofNat i) (bytes.drop i) 8
+    (by simp [List.length_drop]; omega)
+
 /-! ## Word windows -/
 
 /-- The four little-endian bytes of a `UInt32`. -/
