@@ -187,6 +187,8 @@ def inputsOf {ι : Type} [Domain ι] (_p : Problem ι) (o : Options) (fam : Fami
 structure Tally where
   inputs : Nat := 0
   pass : Nat := 0
+  /-- Passes on inputs with no simpler input (`Domain.shrink x = []`: the empty list, `(0, 0)`). -/
+  trivialPass : Nat := 0
   fail : Nat := 0
   vacuousOom : Nat := 0
   vacuousDivergent : Nat := 0
@@ -203,8 +205,15 @@ def Tally.add (t : Tally) : Verdict → Tally
 
 def Tally.json (t : Tally) : Json :=
   Json.mkObj [("inputs", toJson t.inputs), ("pass", toJson t.pass), ("fail", toJson t.fail),
+    ("trivial_pass", toJson t.trivialPass),
     ("vacuous_oom", toJson t.vacuousOom), ("vacuous_divergent", toJson t.vacuousDivergent),
     ("out_of_fuel", toJson t.outOfFuel), ("error", toJson t.error)]
+
+/-- Count a pass on a shrink-minimal input as trivial as well. -/
+def Tally.noteTrivial (t : Tally) (verdict : Verdict) (minimal : Bool) : Tally :=
+  match verdict with
+  | .pass => if minimal then { t with trivialPass := t.trivialPass + 1 } else t
+  | _ => t
 
 def configJson (o : Options) (shape : Shape) (source : String) (truncated : Bool) : Json :=
   Json.mkObj
@@ -259,8 +268,9 @@ def testAll {ι : Type} [Domain ι] (p : Problem ι) (shape : Shape) (o : Option
           truncated := true
           break
       let (obs, verdict) := evaluate p shape o candidate x
-      total := total.add verdict
-      perFamily := perFamily.modify fam.index (·.add verdict)
+      let minimal := (Domain.shrink x).isEmpty
+      total := (total.add verdict).noteTrivial verdict minimal
+      perFamily := perFamily.modify fam.index (fun t => (t.add verdict).noteTrivial verdict minimal)
       for f in obs.functions do seen := seen.insert f
       maxSteps := max maxSteps obs.steps
       if let .error message := verdict then
@@ -280,7 +290,8 @@ def testAll {ι : Type} [Domain ι] (p : Problem ι) (shape : Shape) (o : Option
   let verdict :=
     if counterexample.isSome then "fail"
     else if total.error > 0 then "error"
-    else if total.pass == 0 && total.vacuousOom + total.vacuousDivergent > 0 then "vacuous-only"
+    -- every non-trivial input ended vacuously: a module that cannot allocate still "sorts" the empty list
+    else if total.pass == total.trivialPass && total.vacuousOom + total.vacuousDivergent > 0 then "vacuous-only"
     else if total.inputs == 0 then "error"
     else "pass"
   let families := Family.all.map fun f => (f.name, (perFamily.getD f.index {}).json)

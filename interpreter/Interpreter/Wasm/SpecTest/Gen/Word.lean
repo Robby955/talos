@@ -131,9 +131,11 @@ instance listDomain {α : Type} [Word α] : Domain (List α) where
     let (len, g) := match cfg.fixedLen with
       | some n => (n, g)
       | none =>
-        let (w, g) := g.below (Nat.log2 (cfg.maxLen + 1) + 2)
+        -- size class `w` uniform, then a length in `[2 ^ (w - 1), 2 ^ w)`: short and long lists are
+        -- equally common, and no draw is spent on the empty list (edge and exhaustive cover it)
+        let (w, g) := g.below (Nat.log2 (max cfg.maxLen 1) + 1)
         let (n, g) := g.below (2 ^ w)
-        (min n cfg.maxLen, g)
+        (min (2 ^ w + n) (max cfg.maxLen 1), g)
     let (small, g) := g.below 4
     let (vs, g) := randomValues (Word.bits α) (small == 0) len g []
     (vs.map Word.ofNat, g)
