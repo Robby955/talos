@@ -47,7 +47,7 @@ theorem export_terminates (input : Spec.Input) :
   · exact entryHeap_below_heapBase
   · exact entryGlobals_agree input
   · simp
-  · intro hlc gs
+  · intro hlc gs legacyPages
     dsimp only [exportConfig]
     iintro ⟨Hheap, Hglobals, Hruntime, Henv, Hhost, Hfrontier, Hpages⟩
     ihave Hruntime' :
