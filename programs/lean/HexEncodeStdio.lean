@@ -5,6 +5,7 @@ import HexEncodeStdio.Blueprint
 import HexEncodeStdio.AllocatorMemoryCost
 import HexEncodeStdio.ResourceProof
 import HexEncodeStdio.ExecutionBudget
+import Project.HexStdio.Proof
 
 /-!
 # `hex_stdio` encode — public total correctness
@@ -21,6 +22,5 @@ numerical byte-work bound and a physical-page bound at every execution prefix.
 Its formulas are defined in `Project.HexEncodeStdio.ResourceBounds`.
 -/
 
-theorem hex_encode_stdio_correct : Project.HexStdio.Spec.EncodeSpec := by
-  intro input
-  exact Project.HexEncodeStdio.Blueprint.encode_export_outcome input
+theorem hex_encode_stdio_correct : Project.HexStdio.Spec.EncodeSpec :=
+  Project.HexStdio.Proof.encode_total_correct

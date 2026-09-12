@@ -31,6 +31,8 @@ ROOTS = {
         "Project.HexEncodeStdio.ExecutionBudget.run_export_encoded",
     "CodeLib.SepLogic.CostedTerminalBounds":
         "Wasm.SmallStep.runSteps_result_of_steps_le",
+    "Project.HexStdio.Proof":
+        "Project.HexStdio.Proof.encode_memory_correct",
 }
 # Existing hex proofs emit legacy linter warnings. CI checks Project with
 # --wfail before running this combined validation target.

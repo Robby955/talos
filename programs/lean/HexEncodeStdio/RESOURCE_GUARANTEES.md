@@ -48,8 +48,12 @@ memory. Rust/compiler changes can require updates to the generated-body proofs.
 - `Wasm.SmallStep.runSteps_result_of_steps_le` is the shared bridge from a
   relational execution prefix to an executable runner with sufficient budget.
 
-These resource and budget theorems are available through the Lean proof APIs.
-They do not add fuel-bearing public verifier specification cards.
+The verifier displays two semantic contracts: `Project.HexStdio.Spec.EncodeSpec`
+retains total success-or-OOM correctness for every input; `EncodeMemorySpec`
+guarantees normal output and every-prefix physical-memory bounds for the
+bounded input domain. `Project.HexStdio.Proof` registers their checked proofs
+where the extractor discovers them. Numerical work and runner budgets remain
+in the Lean proof APIs; neither public contract mentions fuel.
 
 ## Reproduction
 
