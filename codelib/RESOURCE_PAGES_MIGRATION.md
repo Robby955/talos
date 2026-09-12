@@ -40,10 +40,9 @@ snapshot.
    binder belongs to the adequacy frontend.
 2. For a total-adequacy callback that explicitly quantifies over `hlc`, change
    `intro hlc gs` to `intro hlc gs legacyPages`.
-   `wasm_smallStep_terminates` has this signature. The same additional binder
-   appears in the quicksort
-   [`TotalProof.lean`](CodeLib/Examples/Quicksort/TotalProof.lean) callback to
-   `wasm_smallStep_heap_store_terminates`.
+   `wasm_smallStep_terminates` has this signature; the mergesort
+   [`TotalProof.lean`](../programs/lean/Project/Mergesort/TotalProof.lean)
+   provides a concrete caller of the cap-aware total frontend.
 3. If a wrapper calls a legacy growth or host-update rule, add
    `[WasmMemoryPagesLegacy α]` after its Wasm instance. Carry this requirement
    through callers until the adequacy frontend supplies it. Proof helpers that

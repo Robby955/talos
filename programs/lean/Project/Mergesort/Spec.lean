@@ -142,4 +142,31 @@ def PublicTotalSpecification : Prop :=
       | .sorted values => SortedPermutation input values
       | .outOfMemory => True
 
+/-- A conservative physical-page budget for the input buffers and both work
+arrays. One Wasm page is 65,536 bytes; this is not a host-memory or time bound. -/
+def growingPageBound (input : Input) : Nat :=
+  max 17 ((1049542 + 24 * input.length + 65535) / 65536)
+
+/-- Successful sorting within the proved physical-memory budget.
+
+Informal spec:
+For every input of at most 89,434,754 packed UInt32 values, the actual
+mergesort export returns normally and writes the same values in sorted order,
+including duplicates. Every execution prefix uses at most `growingPageBound`
+physical Wasm pages. The standard host and 65,536-page cap are unchanged.
+The input limit is sufficient for successful allocation; larger inputs may
+also succeed. -/
+@[spec_of "rust-exported" "mergesort::mergesort"]
+def PublicGrowingMemorySpecification : Prop :=
+  ∀ input : Input, input.length ≤ 89434754 →
+    (∃ values : List UInt32,
+      Runs "mergesort" (args input) (result (.sorted values)) ∧
+        SortedPermutation input values) ∧
+    ∀ initial : SmallStep.Config Universal.State,
+      startExportConfig? (Universal.envFor «module»)
+        «module» "mergesort" (args input) = some initial →
+      ∀ (trace : List SmallStep.StepKind) (reached : SmallStep.Config Universal.State),
+        SmallStep.Steps initial trace reached →
+          reached.store.wasm.mem.pages ≤ growingPageBound input
+
 end Project.Mergesort.Spec

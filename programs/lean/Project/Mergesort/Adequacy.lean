@@ -355,6 +355,7 @@ theorem twp_entry_of_func3
     (remainder := []) (controls := []) (calls := [])
     (s := Stuckness.NotStuck) (E := ⊤) (Φ := irisEntryPost input)
   unfold CallContract at hcall
+  simp only [WithAllocationPolicy] at hcall
   iapply_frame hcall using [Hruntime Hsp Hstack Hbump Hstreams]
   isplitr_pureexact entryStackBytes_length
   isplitr
