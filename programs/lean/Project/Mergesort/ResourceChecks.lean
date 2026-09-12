@@ -1,4 +1,4 @@
-import Project.Mergesort.ExportWorkProof
+import Project.Mergesort.ExecutionBudget
 
 /-!
 # Axiom checks for the compiled mergesort resource certificates
@@ -30,3 +30,5 @@ the output certificates and their concrete caller-context regressions.
 #print axioms Project.Mergesort.ExportWorkProof.export_cost
 #print axioms Project.Mergesort.ExportWorkProof.named_export_work
 #print axioms Project.Mergesort.ExportWorkProof.workBound_no_growth
+
+#print axioms Project.Mergesort.ExecutionBudget.run_export_sorted

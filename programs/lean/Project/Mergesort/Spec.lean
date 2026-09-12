@@ -11,10 +11,11 @@ The exported Rust function reads packed little-endian `UInt32` values from
 standard input until exhaustion and writes the sorted values in the same
 four-byte-per-value format.
 
-The public specifications hide fuel, linear memory, allocator state, and the
-implementation's internal scratch array. The partial contract classifies
-finite terminal traces. The total contract additionally requires an actual
-terminal execution, with sorted output or the distinguished `talos.oom` trap.
+The partial contract classifies terminal outcomes. The total contract also
+proves termination, permitting either sorted output or the allocator's OOM
+trap. The growing-memory contract gives a sufficient input-size condition for
+normal return and bounds physical Wasm pages throughout execution. Internal
+allocator ownership and numerical runner budgets stay in the proof APIs.
 -/
 
 namespace Project.Mergesort.Spec
