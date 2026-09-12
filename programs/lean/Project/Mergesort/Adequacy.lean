@@ -8,9 +8,9 @@ set_option maxHeartbeats 0
 # Partial adequacy for the merge-sort entry call
 
 This file connects the authoritative `Func3Spec` call contract to the public
-outcome-sensitive partial-correctness specification.  It deliberately contains
-no termination argument: finite normal and trapping traces are classified, but
-divergence is not excluded by the current Iris integration.
+outcome-sensitive partial-correctness specification. It classifies finite
+normal and trapping traces and supplies the resource readouts reused by
+`TotalProof` for named-export termination.
 -/
 
 namespace Project.Mergesort.Adequacy
@@ -251,7 +251,8 @@ theorem initialResources [WasmSmallStepGS hlc Universal.State]
   isplitl_exact Hbump
   · iexact Hstreams
 
-private abbrev irisEntryPost [WasmSmallStepGS hlc Universal.State]
+/-- Hide the terminal machine resources behind the public outcome predicate. -/
+abbrev irisEntryPost [WasmSmallStepGS hlc Universal.State]
     (input : List UInt32) : ObservableOutcome → HeapIProp :=
   fun outcome => iprop(∀ (store : MachineStore Universal.State)
       (observations : List StepKind),
@@ -260,7 +261,7 @@ private abbrev irisEntryPost [WasmSmallStepGS hlc Universal.State]
 
 /-- Normal driver resources establish the public sorted-output postcondition;
 all stack, allocator, and ghost resources are intentionally hidden. -/
-private theorem DriverSuccess_public
+theorem DriverSuccess_public
     [WasmSmallStepGS hlc Universal.State]
     (heapId : GName) (input : List UInt32) :
     DriverSuccess heapId input -∗ irisEntryPost input (.done []) := by
@@ -316,7 +317,7 @@ private theorem DriverOOMState_streams
 
 /-- The exceptional continuation in `Func3Spec` maps every valid driver OOM
 phase to exactly the public `talos.oom` terminal outcome. -/
-private theorem DriverOOM_public
+theorem DriverOOM_public
     [WasmSmallStepGS hlc Universal.State]
     (heapId : GName) (input : List UInt32) :
     (∃ phase : DriverOOMPhase, DriverOOMState heapId input phase) -∗
