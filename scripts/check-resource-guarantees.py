@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and audit the complete mergesort resource proof and executable budget.
+"""Build and audit mergesort and hex resource proofs and executable budgets.
 
 Run from any directory. Paths in the receipt are relative to this repository;
 the report and adjacent logs may be written elsewhere with --report.
@@ -25,8 +25,16 @@ ROOTS = {
         "Project.Mergesort.ExportWorkProof.named_export_work",
     "Project.Mergesort.ExecutionBudget":
         "Project.Mergesort.ExecutionBudget.run_export_sorted",
+    "HexEncodeStdio.ResourceProof":
+        "Project.HexEncodeStdio.ResourceProof.named_export_resources",
+    "HexEncodeStdio.ExecutionBudget":
+        "Project.HexEncodeStdio.ExecutionBudget.run_export_encoded",
+    "CodeLib.SepLogic.CostedTerminalBounds":
+        "Wasm.SmallStep.runSteps_result_of_steps_le",
 }
-BUILD = ["lake", "build", "Project", "--wfail"]
+# Existing hex proofs emit legacy linter warnings. CI checks Project with
+# --wfail before running this combined validation target.
+BUILD = ["lake", "build", "Project", "HexEncodeStdio", "HexDecodeStdio"]
 CONFIG_NAMES = {"lean-toolchain", "lakefile.lean", "lakefile.toml",
                 "lake-manifest.json", "Cargo.toml", "Cargo.lock",
                 "rust-toolchain.toml"}
@@ -88,6 +96,7 @@ open Lean Elab Command
 
 -- Recheck current WAT against the imported AST even on an incremental build.
 #eval Wasm.checkWatFidelity "../rust/build/mergesort/program.wat" Project.Mergesort.module
+#eval Wasm.checkWatFidelity "../rust/build/hex_stdio/program.wat" Project.HexStdio.module
 
 -- Exercise canonical initialization and the proved numerical runner budget.
 #eval do
@@ -104,7 +113,26 @@ open Lean Elab Command
           decide (store.wasm.mem.pages ≤ Project.Mergesort.Spec.growingPageBound input) do
         throw <| IO.userError "mergesort budget execution returned an unexpected result"
     | _ => throw <| IO.userError "mergesort budget execution did not return normally"
-  IO.println "Five named-export budget executions passed"
+  IO.println "Five mergesort named-export budget executions passed"
+
+-- Literal encodings cover empty input, byte boundaries, and multi-read input.
+#eval do
+  let cases : List (List UInt8 × List UInt8) :=
+    [([], []), ([0], [48, 48]), ([255], [102, 102]),
+     ([0, 15, 16, 127, 128, 255], "000f107f80ff".toUTF8.toList),
+     (List.replicate 256 65, (List.replicate 256 [52, 49]).flatten),
+     (List.replicate 257 0, (List.replicate 257 [48, 48]).flatten)]
+  for (input, expected) in cases do
+    match Project.HexEncodeStdio.ExecutionBudget.run input with
+    | some (.success values store) =>
+      unless values == [] && store.wasm.host.stdio.output == expected &&
+          store.wasm.host.stdio.output == Project.HexStdio.Spec.encode input &&
+          store.wasm.host.stdio.input == [] && !store.wasm.host.oom.raised &&
+          decide (17 ≤ store.wasm.mem.pages ∧
+            store.wasm.mem.pages ≤ Project.HexEncodeStdio.ResourceBounds.pageBound input) do
+        throw <| IO.userError "hex budget execution returned an unexpected result"
+    | _ => throw <| IO.userError "hex budget execution did not return normally"
+  IO.println "Six hex named-export budget executions passed"
 
 run_cmd do
   let env ← getEnv
@@ -134,7 +162,7 @@ def validate_groups(groups: list[dict], modules: list[str], roots: dict) -> dict
         raise ValueError("Audit contains duplicate declarations")
     theorems = {(d["module"], d["name"]) for d in declarations if d["theorem"]}
     if not set(roots.items()) <= theorems:
-        raise ValueError("A required public export theorem was not audited")
+        raise ValueError("A required resource or runner theorem was not audited")
     return {
         "modules": sorted(modules),
         "declarations_checked": len(declarations),
@@ -187,7 +215,7 @@ def run_check(root: Path, report: Path) -> int:
         stage = "build"
         build_log = report.with_suffix(".build.log")
         result["build"]["log"] = build_log.name
-        print("Building Project and the complete mergesort resource proofs", flush=True)
+        print("Building Project and the complete mergesort and hex resource proofs", flush=True)
         with build_log.open("w") as log:
             build = subprocess.run(BUILD, cwd=package, stdout=log, stderr=subprocess.STDOUT)
         result["build"]["returncode"] = build.returncode
@@ -216,8 +244,12 @@ def run_check(root: Path, report: Path) -> int:
             raise ValueError(f"Imported local modules have no source: {missing}")
         result["module_sources"] = {m: sources[m] for m in modules}
         result["external_imports"] = sorted(set(imported) - set(modules))
-        result["wat_fidelity_checked"] = ["programs/rust/build/mergesort/program.wat"]
-        result["named_export_budget_execution_cases"] = 5
+        result["wat_fidelity_checked"] = [
+            "programs/rust/build/mergesort/program.wat",
+            "programs/rust/build/hex_stdio/program.wat",
+        ]
+        result["named_export_budget_execution_cases"] = 11
+        result["named_export_budget_cases_by_program"] = {"mergesort": 5, "hex_encode": 6}
         changes = inventory_changes(before, source_inventory(root))
         if changes:
             raise ValueError(f"Validation inputs changed during the build: {changes}")

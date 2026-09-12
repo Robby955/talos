@@ -4,6 +4,7 @@ import HexEncodeStdio.Helpers
 import HexEncodeStdio.Blueprint
 import HexEncodeStdio.AllocatorMemoryCost
 import HexEncodeStdio.ResourceProof
+import HexEncodeStdio.ExecutionBudget
 
 /-!
 # `hex_stdio` encode — public total correctness

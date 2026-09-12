@@ -1,4 +1,5 @@
 import Project.Mergesort.ExportWorkProof
+import CodeLib.SepLogic.CostedTerminalBounds
 
 /-! # Executing mergesort with its proved work budget
 
@@ -12,28 +13,6 @@ namespace Project.Mergesort.ExecutionBudget
 
 open Wasm Wasm.SmallStep
 open Project.Mergesort.ExportWorkProof
-
-/-- Executing a relational prefix consumes one fuel unit per transition and
-then continues from the reached configuration with the remaining budget. -/
-private theorem runSteps_result_of_steps_le
-    {initial final : Config α} {trace : List StepKind}
-    (execution : Steps initial trace final) (budget : Nat)
-    (fits : trace.length ≤ budget) :
-    (runSteps budget initial).result =
-      (runSteps (budget - trace.length) final).result := by
-  induction execution generalizing budget with
-  | refl config => simp
-  | @cons config kind next trace final head _ ih =>
-    cases budget with
-    | zero => simp at fits
-    | succ budget =>
-      have tailFits : trace.length ≤ budget := by simpa using fits
-      rcases config with ⟨expr, store⟩
-      cases expr with
-      | done values => exact False.elim (done_terminal head)
-      | trapped reason => exact False.elim (trapped_terminal head)
-      | running thread =>
-        simpa [runSteps, stepChecked?_complete head] using ih budget tailFits
 
 /-- Run the named export using its closed numerical bound as the runner budget.
 Inputs outside the proved size range still have an executable result, but the

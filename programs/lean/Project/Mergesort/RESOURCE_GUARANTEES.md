@@ -71,11 +71,14 @@ python3 scripts/check-resource-guarantees.py --self-test
 python3 scripts/check-resource-guarantees.py
 ```
 
-The validator checks the generated WAT against the imported module, runs five
-input cases through the executable budget adapter, requires both the resource theorem and executable-budget theorem in the import closure,
-and audits every local declaration in that closure, including private helpers.
-Only `propext`, `Classical.choice`, and `Quot.sound` are accepted. Its receipt
-records source hashes and fails if validation inputs change during the run.
+On this branch the combined validator also checks the hex resource consumer.
+It checks both WAT files, executes five mergesort and six hex inputs with their
+proved budgets, and audits the resource theorems, both adapters and the shared
+runner lemma. Every local declaration in their import closure is included,
+including private helpers. Only `propext`, `Classical.choice`, and `Quot.sound`
+are accepted. Its receipt records source hashes and fails if validation inputs
+change during the run. Existing hex libraries retain legacy linter warnings;
+the separate Project command above treats warnings as errors.
 
 ## Integration and maintenance
 
