@@ -200,7 +200,7 @@ theorem twp_universal_read {hlc : HasLC}
       exact Hfacts
     have hbound : ptr.toNat + old.length ≤ store.wasm.mem.pages * 65536 :=
       pointsToBytes_facts_bound Hfacts hpos hnowrap
-    ihave Hold := Project.HexEncodeStdio.Helpers.pointsToBytes_take_drop 0 ptr old
+    ihave Hold := Wasm.SepLogic.pointsToBytes_take_drop 0 ptr old
       read.length hread_le $$ Hold
     icases Hold with ⟨Hprefix, Hsuffix⟩
     imod stateInterp_writeBytes_exact store ns obs nt ptr (old.take read.length)
@@ -313,7 +313,7 @@ theorem func16_body {hlc : HasLC}
           Project.HexStdio.func16, arity, remainder, controls, calls⟩ :
             Expr Universal.State) @ s; E [{ Φ }] := by
   obtain ⟨r4, r5, r6, r7⟩ :=
-    Project.HexEncodeStdio.Helpers.wordAccessFacts result 4 (by
+    Wasm.SepLogic.wordAccessFacts result 4 (by
       norm_num [UInt32.size] at hresult ⊢
       omega)
   iintro ⟨Hruntime, Henv, Hhost, Hbytes, Htag, Hlength, Hnext⟩
