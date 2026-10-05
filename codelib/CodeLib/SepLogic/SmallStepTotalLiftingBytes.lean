@@ -9,8 +9,9 @@ factored out of the `hex_stdio` worked examples for reuse:
 * byte-granular memory access — `twp_load8U`, `twp_load8S`, `twp_load8U_addr`,
   `twp_store8`, `twp_store8_addr`, `twp_store32_addr`, `twp_store64_addr`;
 * the signed comparison `twp_ltS` and `twp_drop`; and
-* `twp_memorySize_framed`, `twp_memoryGrow_framed`, and `twp_memoryGrow_fresh`
-  for memory-size tracking and fresh-byte ownership.
+* `twp_memorySize_framed`, `twp_memoryGrow_framed`, and
+  `twp_memoryGrow_fresh_tracked` for memory-size tracking and fresh-byte
+  ownership.
 
 Each is program-agnostic and has a use site in the hex encode/decode proofs.
 -/
@@ -599,8 +600,11 @@ theorem twp_store64_addr
   iexact Hword
 
 
-/-- A tracked `memory.grow` rule that owns each newly claimed byte. -/
-theorem twp_memoryGrow_fresh
+/-- A tracked `memory.grow` rule that owns each newly claimed byte.  The page
+count is tracked through `memoryPagesOwn`; named `_tracked` to stay distinct
+from the program-local `twp_memoryGrow_fresh` rules (which take a `frontier`
+hypothesis instead). -/
+theorem twp_memoryGrow_fresh_tracked
     {params localValues values : List Value} {delta : UInt32}
     {code : Program} {arity : Nat} {remainder : List Value}
     {controls : List ControlFrame} {calls : List CallFrame}
