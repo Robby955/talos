@@ -1,6 +1,5 @@
 import CodeLib.SepLogic.WasmHeap
 import CodeLib.SepLogic.SmallStepState
-import CodeLib.RustStd.U64.AbsDiff
 
 /-!
 # Byte-range `pointsToBytes` slicing
@@ -8,7 +7,7 @@ import CodeLib.RustStd.U64.AbsDiff
 Borrow/update a single byte of an owned byte range and get a wand that
 restores it (`pointsToBytes_focus`/`_focus_update`), split and rejoin a
 range (`pointsToBytes_slice`/`_take_drop`/`_take_drop_join`), view a u64 as
-its four bytes (`pointsTo_u64_as_bytes`), and the four consecutive
+its eight bytes (`pointsTo_u64_as_bytes`), and the four consecutive
 `(ptr + n).toNat` address facts (`wordAccessFacts`) — all bv-decide-free.
 -/
 

@@ -28,3 +28,4 @@ import Project.Mergesort.DriverProof
 import Project.Mergesort.Proof
 import Project.Mergesort.TotalProof
 import Project.Mergesort.ExecutionBudget
+import Project.RustVec.Spec

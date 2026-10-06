@@ -55,7 +55,7 @@ theorem final_store_resources (store : MachineStore Universal.State) (memory : M
     (finalStore store memory output n).runtime=store.runtime ∧
     (finalStore store memory output n).wasm.mem.pages=memory.pages ∧
     (finalStore store memory output n).wasm.host=
-      TotalWrite.afterWrite store.wasm.host
+      afterWrite store.wasm.host
         ((completedStore store memory n).wasm.mem.readBytes output.toNat (2*n)) := by
   refine ⟨rfl,rfl,?_⟩
   simp only [finalStore,ExportResourceCost.restoredMainStore,ExportResourceCost.completedWriteStore,
@@ -86,7 +86,7 @@ theorem after_encoder_cost (store : MachineStore Universal.State) (memory : Mem)
       (finalStore store memory output n).runtime=store.runtime ∧
       (finalStore store memory output n).wasm.mem.pages=store.wasm.mem.pages ∧
       (finalStore store memory output n).wasm.host=
-        TotalWrite.afterWrite store.wasm.host
+        afterWrite store.wasm.host
           ((completedStore store memory n).wasm.mem.readBytes output.toNat (2*n)) := by
   have hlen : (UInt32.ofNat (2*n)).toNat=2*n := UInt32.toNat_ofNat_of_lt' (by omega)
   have hlenNe : UInt32.ofNat (2*n)≠0 := by

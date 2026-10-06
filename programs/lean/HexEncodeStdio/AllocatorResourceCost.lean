@@ -80,7 +80,7 @@ theorem grow_success (store : MachineStore Universal.State) (required : UInt32)
       required.toNat - store.wasm.mem.pages := by
     rw [UInt32.toNat_sub_of_le _ _ hle, hpagesNat]
   simp only [Mem.grow, hdelta, Nat.add_sub_of_le (Nat.le_of_lt hneedNat), hcap]
-  rw [if_pos (hrequired.trans (by decide))]
+  rw [ite_eq_left (hrequired.trans (by decide))]
 
 /-- Complete actual call15 and original caller resumption, with a precise
 post-store and all-prefix page bounds. All premises concern the initial store
@@ -129,7 +129,7 @@ theorem allocator_byte_cost (store : MachineStore Universal.State)
       store params localValues stack code arity remainder controls calls size 1 bump hmodule
       hread hcursor hfirst hsecond hnegative (hcompare.mpr henough)
     have run := steps.growth_byteWork labels CostedStdIO.hostBytes
-    refine ⟨trace, by rw [if_pos henough]; exact hlength, ?_, ?_, fun kind member => (labels kind member).primary⟩
+    refine ⟨trace, by rw [ite_eq_left henough]; exact hlength, ?_, ?_, fun kind member => (labels kind member).primary⟩
     · simpa only [AllocatorMemoryCost.callConfig,AllocatorMemoryCost.returnConfig,
         List.cons_append,List.nil_append,CostedStdIO.work,finalStore, grownMemory, max_eq_left henough, allocatorGrownStore,
         hlength, Nat.sub_eq_zero_of_le henough, Nat.mul_zero, Nat.add_zero, hptr, hfinishWord,
@@ -155,7 +155,7 @@ theorem allocator_byte_cost (store : MachineStore Universal.State)
       hmodule hread hcursor (hcursor.trans (Nat.mul_le_mul_right 65536 hbefore))
       hfirst hsecond hnegative hneed hgrow hresult
     have run := steps.growth_byteWork labels CostedStdIO.hostBytes
-    refine ⟨trace, by rw [if_neg henough]; exact hlength, ?_, ?_, fun kind member => (labels kind member).primary⟩
+    refine ⟨trace, by rw [ite_eq_right henough]; exact hlength, ?_, ?_, fun kind member => (labels kind member).primary⟩
     · simpa only [AllocatorMemoryCost.callConfig,AllocatorMemoryCost.returnConfig,
         List.cons_append,List.nil_append,CostedStdIO.work,finalStore, grownMemory, max_eq_right (Nat.le_of_not_ge henough),
         hrequired, hlength, hfinishWord, hptr,allocatorBumpStore,allocatorGrownStore,Mem.write32_pages] using run

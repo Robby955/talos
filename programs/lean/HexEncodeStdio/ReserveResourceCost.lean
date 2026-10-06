@@ -54,7 +54,7 @@ private theorem grow_result_fresh_prefix_cost
     apply Steps.cons (Step.localGet rfl)
     apply Steps.cons Step.const
     apply Steps.cons
-      (Step.ltS (result := 0) (Eq.symm (if_neg hnonneg)))
+      (Step.ltS (result := 0) (Eq.symm (ite_eq_right hnonneg)))
     apply Steps.cons Step.brIfZero
     apply Steps.cons Step.block
     apply Steps.cons Step.block
@@ -129,7 +129,7 @@ private theorem grow_result_realloc_prefix_cost
     apply Steps.cons (Step.localGet rfl)
     apply Steps.cons Step.const
     apply Steps.cons
-      (Step.ltS (result := 0) (Eq.symm (if_neg hnonneg)))
+      (Step.ltS (result := 0) (Eq.symm (ite_eq_right hnonneg)))
     apply Steps.cons Step.brIfZero
     apply Steps.cons Step.block
     apply Steps.cons Step.block
@@ -266,11 +266,11 @@ theorem allocation_success (store : MachineStore Universal.State) (capacity poin
   dsimp only [frontier] at hrequired hfinish hcompare
   by_cases henough : AllocatorResourceCost.requiredPages ((allocatorBase bump).toNat+size.toNat)≤store.wasm.mem.pages
   · by_cases hzero : capacity=0
-    · simpa only [allocationStore,if_pos hzero,AllocatorResourceCost.finalStore,
+    · simpa only [allocationStore,ite_eq_left hzero,AllocatorResourceCost.finalStore,
         AllocatorResourceCost.grownMemory,max_eq_left henough,allocatorGrownStore,hfinish]
         using (ByteGrowSuccess.freshNoGrow (store:=store) (oldPtr:=pointer) (newCapacity:=size) (oldBump:=bump)
           hzero (hcompare.mpr henough) hnegative)
-    · simpa only [allocationStore,if_neg hzero,ReallocatorResourceCost.finalStore,
+    · simpa only [allocationStore,ite_eq_right hzero,ReallocatorResourceCost.finalStore,
         AllocatorResourceCost.grownMemory,max_eq_left henough,allocatorGrownStore]
         using (ByteGrowSuccess.reallocNoGrow (store:=store) (oldPtr:=pointer) (newCapacity:=size) (oldBump:=bump)
           hzero (hcompare.mpr henough))
@@ -280,12 +280,12 @@ theorem allocation_success (store : MachineStore Universal.State) (capacity poin
     have hgrow := AllocatorResourceCost.grow_success store (allocatorRequiredPages size 1 bump) hcap hpages hbound hneed
     let memory : Mem := { store.wasm.mem with pages := (allocatorRequiredPages size 1 bump).toNat }
     by_cases hzero : capacity=0
-    · simpa only [allocationStore,if_pos hzero,AllocatorResourceCost.finalStore,
+    · simpa only [allocationStore,ite_eq_left hzero,AllocatorResourceCost.finalStore,
         AllocatorResourceCost.grownMemory,max_eq_right (Nat.le_of_not_ge henough),
         memory,hrequired,hfinish] using
         (ByteGrowSuccess.freshGrow (store:=store) (oldPtr:=pointer) (newCapacity:=size) (oldBump:=bump)
           hzero memory store.wasm.mem.pages hneed hgrow hnegative)
-    · simpa only [allocationStore,if_neg hzero,ReallocatorResourceCost.finalStore,
+    · simpa only [allocationStore,ite_eq_right hzero,ReallocatorResourceCost.finalStore,
         AllocatorResourceCost.grownMemory,max_eq_right (Nat.le_of_not_ge henough),memory,hrequired] using
         (ByteGrowSuccess.reallocGrow (store:=store) (oldPtr:=pointer) (newCapacity:=size) (oldBump:=bump)
           hzero memory store.wasm.mem.pages hgrow)
@@ -384,14 +384,14 @@ theorem byte_grow_cost (store : MachineStore Universal.State)
         allocTrace (growResultAfterReallocator allocated params localValues stack code arity remainder controls calls
           out capacity pointer size (allocatorPtr bump 1))
         (allocTrace.length+capacity.toNat+65536*(AllocatorResourceCost.requiredPages (frontier+size.toNat)-store.wasm.mem.pages)) := by
-      simpa only [growResultReallocatorCall,growResultAfterReallocator,allocationStore,allocated,if_neg hzero,
+      simpa only [growResultReallocatorCall,growResultAfterReallocator,allocationStore,allocated,ite_eq_right hzero,
         saved,hpointer,ReallocatorResourceCost.finalStore,reallocatorResultStore_runtime,allocatorGrownStore,
         List.cons_append,List.nil_append] using allocRun
     have haout : out.toNat+12≤allocated.wasm.mem.pages*65536 := hout'
     have tail := grow_result_realloc_success_suffix_cost allocated params localValues stack code arity remainder controls calls
       out capacity pointer size (allocatorPtr bump 1) hptr (by omega) (by omega) (by omega)
     refine ⟨reallocPrefixTrace++allocTrace++reallocSuffixTrace,?_,?_,success,?_⟩
-    · simp only [if_neg hzero,List.length_append]
+    · simp only [ite_eq_right hzero,List.length_append]
       change 15+allocTrace.length+15≤105
       split_ifs at allocLength <;> omega
     · have run := (first.trans after).trans tail
@@ -469,7 +469,7 @@ private theorem reserve_to_grow_call_cost
     have hsum' : length + additional ≥ additional := by
       simpa only [reserveRequired] using hsum
     apply Steps.cons (Step.geU (result := 1)
-      (Eq.symm (if_pos hsum')))
+      (Eq.symm (ite_eq_left hsum')))
     apply Steps.cons (Step.brIf (condition := 1) (by decide) rfl)
     simp []
     apply Steps.cons (Step.localGet rfl)

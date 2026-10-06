@@ -221,13 +221,13 @@ theorem twp_memoryGrow_exact
   cases hg : store.wasm.mem.grow delta
       (store.wasm.memoryCap store.runtime.currentModule 0) with
   | none =>
-    simp only [Mem.grow, hphysical, hpages, if_pos hfit] at hg
+    simp only [Mem.grow, hphysical, hpages, ite_eq_left hfit] at hg
     contradiction
   | some grown =>
     obtain ⟨memory, previousPages⟩ := grown
     have hfacts : previousPages = pages ∧ memory.pages = pages + delta.toNat := by
       have h := hg
-      simp only [Mem.grow, hphysical, hpages, if_pos hfit] at h
+      simp only [Mem.grow, hphysical, hpages, ite_eq_left hfit] at h
       have hinj := Prod.mk.inj (Option.some.inj h)
       exact ⟨hinj.2.symm, (congrArg (fun m : Mem => m.pages) hinj.1).symm⟩
     ihave Hactual : memoryPagesHalf store.wasm.mem.pages $$ [Hpages]
@@ -274,7 +274,7 @@ theorem twp_memoryGrow_exact_failure
     iframe
   have hg : store.wasm.mem.grow delta
       (store.wasm.memoryCap store.runtime.currentModule 0) = none := by
-    simp only [Mem.grow, hphysical, hpages, if_neg (Nat.not_le_of_lt hfail)]
+    simp only [Mem.grow, hphysical, hpages, ite_eq_right (Nat.not_le_of_lt hfail)]
   wasm_twp_step Step.memoryGrowFailure hg =>
     wasm_twp_frame
       iapply Hwp $$ HP Hruntime Hcap Hpages

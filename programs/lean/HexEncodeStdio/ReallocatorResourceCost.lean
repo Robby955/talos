@@ -127,7 +127,7 @@ private theorem no_grow_prefix
     simpa [allocatorFinish, allocatorPtr, UInt32.sub_eq_add_neg]
       using hnegative
   apply Steps.cons
-    (Step.ltS (result := 0) (if_neg hnegative').symm)
+    (Step.ltS (result := 0) (ite_eq_right hnegative').symm)
   apply Steps.cons Step.brIfZero
   apply Steps.cons Step.block
   apply Steps.cons (Step.localGet rfl)
@@ -140,7 +140,7 @@ private theorem no_grow_prefix
   rw [hmod]
   have hm64 : «module».memIs64 = false := rfl
   rw [hm64]
-  simp only [sizeValue, Bool.false_eq_true, if_false]
+  simp only [sizeValue, Bool.false_eq_true, ite_false]
   apply Steps.cons (Step.localTee rfl)
   have henough' :
       ((65535 + (newSize + ((allocatorBase oldBump +
@@ -149,7 +149,7 @@ private theorem no_grow_prefix
     simpa [allocatorRequiredPages, allocatorFinish, allocatorPtr,
       UInt32.sub_eq_add_neg] using henough
   apply Steps.cons
-    (Step.leU (result := 1) (if_pos henough').symm)
+    (Step.leU (result := 1) (ite_eq_left henough').symm)
   apply Steps.cons (Step.brIf (condition := 1) (by decide) rfl)
   apply Steps.cons Step.const
   apply Steps.cons (Step.localGet rfl)
@@ -161,7 +161,7 @@ private theorem no_grow_prefix
   apply Steps.cons (Step.localGet rfl)
   apply Steps.cons (Step.eqz rfl)
   have hptr : (allocatorBase oldBump + (0xffffffff + align)) &&& (0 - align) ≠ 0 := hptrNonzero
-  rw [if_neg hptr]
+  rw [ite_eq_right hptr]
   have hptrDef : allocatorPtr oldBump align ≠ 0 := by
     simpa [allocatorPtr] using hptr
   have hptrNeg :
@@ -183,7 +183,7 @@ private theorem no_grow_prefix
   apply Steps.cons (Step.localTee rfl)
   apply Steps.cons (Step.eqz rfl)
   have hlen := hcopyNonzero
-  rw [if_neg hlen]
+  rw [ite_eq_right hlen]
   apply Steps.cons Step.brIfZero
   apply Steps.cons (Step.localGet rfl)
   apply Steps.cons (Step.localGet rfl)
@@ -280,7 +280,7 @@ private theorem grow_prefix
     simpa [allocatorFinish, allocatorPtr, UInt32.sub_eq_add_neg]
       using hnegative
   apply Steps.cons
-    (Step.ltS (result := 0) (if_neg hnegative').symm)
+    (Step.ltS (result := 0) (ite_eq_right hnegative').symm)
   apply Steps.cons Step.brIfZero
   apply Steps.cons Step.block
   apply Steps.cons (Step.localGet rfl)
@@ -293,7 +293,7 @@ private theorem grow_prefix
   rw [hmod]
   have hm64 : «module».memIs64 = false := rfl
   rw [hm64]
-  simp only [sizeValue, Bool.false_eq_true, if_false]
+  simp only [sizeValue, Bool.false_eq_true, ite_false]
   apply Steps.cons (Step.localTee rfl)
   have hneed' : ¬
       ((65535 + (newSize + ((allocatorBase oldBump +
@@ -302,7 +302,7 @@ private theorem grow_prefix
     simpa [allocatorRequiredPages, allocatorFinish, allocatorPtr,
       UInt32.sub_eq_add_neg] using hneed
   apply Steps.cons
-    (Step.leU (result := 0) (if_neg hneed').symm)
+    (Step.leU (result := 0) (ite_eq_right hneed').symm)
   apply Steps.cons Step.brIfZero
   apply Steps.cons (Step.localGet rfl)
   apply Steps.cons (Step.localGet rfl)
@@ -325,7 +325,7 @@ private theorem grow_prefix
   apply Steps.cons (Step.localGet rfl)
   apply Steps.cons (Step.eqz rfl)
   have hptr : (allocatorBase oldBump + (0xffffffff + align)) &&& (0 - align) ≠ 0 := hptrNonzero
-  rw [if_neg hptr]
+  rw [ite_eq_right hptr]
   have hptrDef : allocatorPtr oldBump align ≠ 0 := by
     simpa [allocatorPtr] using hptr
   have hptrNeg :
@@ -347,7 +347,7 @@ private theorem grow_prefix
   apply Steps.cons (Step.localTee rfl)
   apply Steps.cons (Step.eqz rfl)
   have hlen := hcopyNonzero
-  rw [if_neg hlen]
+  rw [ite_eq_right hlen]
   apply Steps.cons Step.brIfZero
   apply Steps.cons (Step.localGet rfl)
   apply Steps.cons (Step.localGet rfl)
@@ -455,7 +455,7 @@ theorem reallocator_byte_cost (store : MachineStore Universal.State)
     split <;> simp_all
   have hcopy : reallocatorCopyLen oldSize size = oldSize := by
     unfold reallocatorCopyLen
-    rw [if_neg (by rw [UInt32.not_lt,UInt32.le_iff_toNat_le];exact hle)]
+    rw [ite_eq_right (by rw [UInt32.not_lt,UInt32.le_iff_toNat_le];exact hle)]
   have hcopyNe : reallocatorCopyLen oldSize size ≠ 0 := by
     rw [hcopy]
     intro hz
@@ -476,7 +476,7 @@ theorem reallocator_byte_cost (store : MachineStore Universal.State)
       oldPtr oldSize 1 size bump hptrNe hcopyNe (by simpa only [hcopy] using hsource)
       (by rw [hcopy,hptrNat];have hp:=Nat.mul_le_mul_right 65536 henough;omega)
     refine ⟨prefixTrace false++tailTrace,?_,?_,?_⟩
-    · rw [List.length_append,prefixTrace_length,if_pos henough]
+    · rw [List.length_append,prefixTrace_length,ite_eq_left henough]
       rfl
     · have run := firstCost.trans tail
       convert run using 1
@@ -512,7 +512,7 @@ theorem reallocator_byte_cost (store : MachineStore Universal.State)
       (by rw [hcopy];exact hsource.trans (Nat.mul_le_mul_right 65536 hbefore))
       (by rw [hcopy,hptrNat];change frontier+oldSize.toNat≤(allocatorRequiredPages size 1 bump).toNat*65536;rw [hrequired];omega)
     refine ⟨prefixTrace true++tailTrace,?_,?_,?_⟩
-    · rw [List.length_append,prefixTrace_length,if_neg henough]
+    · rw [List.length_append,prefixTrace_length,ite_eq_right henough]
       rfl
     · have run := firstCost.trans tail
       convert run using 1
@@ -546,7 +546,7 @@ private theorem copy_word_before (memory : Mem) (destination source count : Nat)
     (h : address.toNat+4≤destination) :
     (memory.copy destination source count).read32 address=memory.read32 address := by
   simp only [Mem.read32,Mem.copy]
-  rw [if_neg,if_neg,if_neg,if_neg]
+  rw [ite_eq_right,ite_eq_right,ite_eq_right,ite_eq_right]
   all_goals omega
 
 theorem finalStore_cursor (store : MachineStore Universal.State) (oldPtr oldSize size bump : UInt32)

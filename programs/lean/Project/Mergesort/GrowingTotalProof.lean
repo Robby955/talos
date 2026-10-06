@@ -23,6 +23,9 @@ open Project.Mergesort.MemoryBounds Project.Mergesort.ExactReadLoop
 open Project.Mergesort.ExactWorkAllocators
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- The selected cap resource describes the canonical store's actual metadata. -/
 theorem entryCaps_agree (input : Spec.Input) :
     capHeapAgrees (PartialMap.singleton 0 Module.memoryHardCap)
@@ -120,7 +123,7 @@ theorem terminal_execution_normal (input : Spec.Input)
       (entryCaps_agree input) (entryGlobals_agree input) (by simp) with
     ⟨%gs, %hmode, Hstate, Hclient, Hhalf⟩
   rcases hmode with ⟨rfl, hhalf⟩
-  letI : WasmSmallStepGS .hasLC Universal.State := gs
+  let _ : WasmSmallStepGS .hasLC Universal.State := gs
   ihave Hwp := growing_export_twp input hhalf hfit $$ [Hclient Hhalf]
   · iframe Hclient Hhalf
   imod twp_replay_value (post := fun outcome : ObservableOutcome => iprop(ProgramPages input ∗

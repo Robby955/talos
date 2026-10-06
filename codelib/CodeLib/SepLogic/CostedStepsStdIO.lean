@@ -71,7 +71,7 @@ theorem readHost_invoke (store : Store Universal.State) (length pointer : UInt32
         (readStore store length pointer) := by
   simp only [readHost, HostFn.lift, StdIO.readHost, StdIO.readResult,
     Store.focus, Store.mapHost, lens]
-  rw [if_pos]
+  rw [ite_eq_left]
   · rfl
   · exact decide_eq_true hbound
 
@@ -81,7 +81,7 @@ theorem writeHost_invoke (store : Store Universal.State) (length pointer : UInt3
       .Return [] (writeStore store length pointer) := by
   simp only [writeHost, HostFn.lift, StdIO.writeHost, StdIO.writeResult,
     Store.focus, Store.mapHost, lens]
-  rw [if_pos]
+  rw [ite_eq_left]
   · rfl
   · exact decide_eq_true hbound
 

@@ -238,7 +238,7 @@ theorem GeometricVecFacts.frontier_le_twice_capacity
   · omega
   · omega
   · obtain ⟨e, _, _, hcap, _, _, _, hfrontier, _⟩ := hlarge
-    rw [hfrontier, vectorBlockBase, hcap]
+    unfold vectorBlockBase at hfrontier
     omega
 
 theorem BoundedGeometricVecFacts.frontier_le
@@ -343,12 +343,12 @@ theorem classifyBump_align4_success
     omega
   refine ⟨base, UInt32.ofNat (base.toNat + size), ?_, ?_⟩
   · simp only [classifyBump, show (4 : Nat) - 1 = 3 by decide,
-      dif_pos hsum]
+      dite_eq_left hsum]
     change (if base.toNat + size < UInt32.size ∧
         base.toNat + size < 2147483648 then
       BumpDecision.success base (UInt32.ofNat (base.toNat + size))
       else BumpDecision.oom) = _
-    rw [if_pos hend]
+    rw [ite_eq_left hend]
   · rw [UInt32.toNat_ofNat_of_lt' hend.1]
     omega
 

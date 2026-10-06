@@ -18,6 +18,9 @@ open Project.Mergesort.Contracts Project.Mergesort.Representations
 open Project.Mergesort.DriverProof Project.Mergesort.MemoryBounds
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- A reserve reached from the actual read-loop bookkeeping returns normally,
 including when it grows physical memory. No accepted classification or grow
 outcome is assumed by the caller. -/

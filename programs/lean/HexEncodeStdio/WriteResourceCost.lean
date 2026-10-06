@@ -17,7 +17,7 @@ private theorem read8_write32_disjoint (m : Mem) (writeAddr readAddr : UInt32)
 
 def universalWriteStore (store : MachineStore Universal.State)
     (bytes : List UInt8) : MachineStore Universal.State :=
-  { store with wasm := { store.wasm with host := TotalWrite.afterWrite store.wasm.host bytes } }
+  { store with wasm := { store.wasm with host := afterWrite store.wasm.host bytes } }
 
 def writeAdapterResultStore (store : MachineStore Universal.State)
     (out : UInt32) (bytes : List UInt8) (length : UInt32) : MachineStore Universal.State :=
@@ -87,7 +87,7 @@ theorem write_adapter_cost (store : MachineStore Universal.State)
     hphysical
   have hstore : {store with wasm := CostedStdIO.writeStore store.wasm length pointer}=
       universalWriteStore store bytes := by
-    simp only [CostedStdIO.writeStore,universalWriteStore,TotalWrite.afterWrite,hread]
+    simp only [CostedStdIO.writeStore,universalWriteStore,afterWrite,hread]
   rw [hstore] at host
   have tail : CostedSteps CostedStdIO.work
       ⟨.running ⟨⟨params,[],[]⟩,func17.drop 3,0,[],[],frame::calls⟩,

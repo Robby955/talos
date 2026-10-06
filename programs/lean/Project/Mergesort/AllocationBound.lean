@@ -47,9 +47,9 @@ theorem BumpHeap_physical_frontier [WasmSmallStepGS hlc Universal.State]
   unfold allocationFrontier
   rw [hread.1]
   by_cases hz : storedCursor = 0
-  · rw [if_pos hz]
+  · rw [ite_eq_left hz]
     exact ((hfacts.2.2.1.mp hz).2).symm
-  · rw [if_neg hz]
+  · rw [ite_eq_right hz]
     exact hfacts.2.2.2.1 hz
 
 theorem DriverSuccess_frontier [WasmSmallStepGS hlc Universal.State]

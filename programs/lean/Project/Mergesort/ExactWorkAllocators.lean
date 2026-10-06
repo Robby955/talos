@@ -16,6 +16,9 @@ open Project.Mergesort.DriverProof Project.Mergesort.MemoryBounds
 open Project.Mergesort.BoundedDriverFacts
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- Physical capacity sufficient for all retained input and work allocations. -/
 def programPageBound (original : List UInt32) : Nat :=
   max 17 ((workArraysFrontierBound (serialize original).length + 65535) / 65536)

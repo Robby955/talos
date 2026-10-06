@@ -354,7 +354,7 @@ theorem bulk_loop_cost (groups : Nat) :
     by_cases hz : groups=0
     · subst groups
       have heq : v.aux5 = (bulkNext v).aux9 := by rw [hnextCounter, hstop]
-      simp only [heq, ne_eq, not_true_eq_false, if_false] at pre
+      simp only [heq, ne_eq, not_true_eq_false, ite_false] at pre
       have branch : CostedSteps (byteWork hostBytes)
           (config (bulkWritten store v) (bulkNext v)
             { ctx with
@@ -378,7 +378,7 @@ theorem bulk_loop_cost (groups : Nat) :
         rw [UInt32.toNat_ofNat_of_lt' (by omega : copied+4*(groups+1)<UInt32.size),
           UInt32.toNat_ofNat_of_lt' (by omega : copied+4<UInt32.size)] at hnat
         omega
-      simp only [if_pos hne] at pre
+      simp only [ite_eq_left hne] at pre
       have branch : CostedSteps (byteWork hostBytes)
           (config (bulkWritten store v) (bulkNext v)
             { ctx with

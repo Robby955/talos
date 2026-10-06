@@ -183,7 +183,7 @@ theorem read_to_end_to_first_chunk
   exact ⟨trace, execution⟩
 
 def readToEndFinishedStore (store : MachineStore Universal.State)
-    (out frame restore : UInt32) (vectorWord : UInt64)
+    (out _frame restore : UInt32) (vectorWord : UInt64)
     (length : UInt32) : MachineStore Universal.State :=
   let memLen := store.wasm.mem.write32 (out + 8) length
   let memVec := memLen.write64 out vectorWord
@@ -268,7 +268,7 @@ def readToEndLoopConfig (store : MachineStore Universal.State)
     (outerParams outerLocalValues stack : List Value) (code : Program)
     (arity : Nat) (remainder : List Value)
     (controls : List ControlFrame) (calls : List CallFrame)
-    (out frame chunk capacity data length filled : UInt32) :
+    (out frame chunk capacity _data length filled : UInt32) :
     Config Universal.State :=
   { expr := .running
       ⟨⟨[.i32 out],
@@ -393,7 +393,7 @@ def readToEndContinuedLoopConfig (store : MachineStore Universal.State)
     (outerParams outerLocalValues stack : List Value) (code : Program)
     (arity : Nat) (remainder : List Value)
     (controls : List ControlFrame) (calls : List CallFrame)
-    (out frame chunk capacity data length filled previousCount previousTarget
+    (out frame chunk capacity _data length filled previousCount previousTarget
       previousBase previousSpare : UInt32) : Config Universal.State :=
   { expr := .running
       ⟨⟨[.i32 out],
@@ -535,7 +535,7 @@ def readToEndGrownAfterAdapterConfig (store : MachineStore Universal.State)
     (arity : Nat) (remainder : List Value)
     (controls : List ControlFrame) (calls : List CallFrame)
     (out frame chunk capacity data length filled target remaining
-      previousBase scratch9 status : UInt32) : Config Universal.State :=
+      _previousBase _scratch9 status : UInt32) : Config Universal.State :=
   { expr := .running
       ⟨⟨[.i32 out],
           [.i32 frame, .i32 chunk, .i32 capacity, .i32 length, .i32 filled,
@@ -568,12 +568,12 @@ theorem read_to_end_after_first_nonempty_to_loop_steps_trace
     (hcount : store.wasm.mem.read32 (frame + 20) = length)
     (hlengthNe : length ≠ 0)
     (hcapacity : store.wasm.mem.read32 (frame + 4) = capacity)
-    (hdata : store.wasm.mem.read32 (frame + 8) = data)
+    (_hdata : store.wasm.mem.read32 (frame + 8) = data)
     (hlength : store.wasm.mem.read32 (frame + 12) = length)
     (htagBound : frame.toNat + 16 + 1 ≤ store.wasm.mem.pages * 65536)
     (hcountBound : frame.toNat + 20 + 4 ≤ store.wasm.mem.pages * 65536)
     (hcapacityBound : frame.toNat + 4 + 4 ≤ store.wasm.mem.pages * 65536)
-    (hdataBound : frame.toNat + 8 + 4 ≤ store.wasm.mem.pages * 65536)
+    (_hdataBound : frame.toNat + 8 + 4 ≤ store.wasm.mem.pages * 65536)
     (hlengthBound : frame.toNat + 12 + 4 ≤ store.wasm.mem.pages * 65536) :
     ScalarReadRun
       ({ expr := .running
@@ -2191,7 +2191,7 @@ theorem read_to_end_after_read_full_double_steps_trace
   apply ScalarReadRun.prepend (Step.localGet rfl) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend Step.const (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend (Step.ltS (result := 0)
-    (if_neg (by simpa using hchunkNonnegative)).symm) (by intro before after; rfl) (by trivial)
+    (ite_eq_right (by simpa using hchunkNonnegative)).symm) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend (Step.localSet rfl) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend (Step.localGet rfl) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend Step.const (by intro before after; rfl) (by trivial)
@@ -2283,7 +2283,7 @@ theorem read_to_end_after_read_full_saturate_steps_trace
   apply ScalarReadRun.prepend (Step.localGet rfl) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend Step.const (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend (Step.ltS (result := 1)
-    (if_pos (by simpa using hchunkNegative)).symm) (by intro before after; rfl) (by trivial)
+    (ite_eq_left (by simpa using hchunkNegative)).symm) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend (Step.localSet rfl) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend (Step.localGet rfl) (by intro before after; rfl) (by trivial)
   apply ScalarReadRun.prepend Step.const (by intro before after; rfl) (by trivial)

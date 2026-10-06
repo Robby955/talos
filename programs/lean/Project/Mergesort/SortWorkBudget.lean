@@ -27,11 +27,11 @@ decreasing_by all_goals omega
   decide
 
 theorem budget_base {n : Nat} (h : n < 2) : budget n = 10 := by
-  rw [budget, dif_pos h]
+  rw [budget, dite_eq_left h]
 
 theorem budget_step {n : Nat} (h : 2 ≤ n) :
     budget n = budget (n / 2) + budget (n - n / 2) + 54 * n + 127 := by
-  rw [budget, dif_neg (by omega)]
+  rw [budget, dite_eq_right (by omega)]
 
 theorem budget_ge_ten (n : Nat) : 10 ≤ budget n := by
   by_cases h : n < 2

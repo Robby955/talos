@@ -18,6 +18,9 @@ open Project.Mergesort.Contracts Project.Mergesort.Representations
 open Project.Mergesort.Func0Proof Project.Mergesort.Func1Proof
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- Compiled `call 3`, including the first-allocation and copying branches,
 returns its updated exact page token with the successful twelve-byte result. -/
 theorem twp_func0_call_exact [WasmSmallStepGS hlc Universal.State]
@@ -117,7 +120,7 @@ theorem twp_func0_call_exact [WasmSmallStepGS hlc Universal.State]
   wasm_twp_pures [twp_const twp_localGet twp_sub]
   have hcapacityGuard : newCapacity ≤ (2147483648 : UInt32) - 1 := by
     rw [UInt32.le_iff_toNat_le_toNat]; exact hnewUpper
-  iapply twp_leU (result := 1) (by rw [if_pos hcapacityGuard])
+  iapply twp_leU (result := 1) (by rw [ite_eq_left hcapacityGuard])
   iapply twp_brIf (by decide) (by rfl)
   simp only [List.take_zero, List.drop_zero, List.nil_append]
   wasm_twp_pures [twp_block twp_block twp_block twp_block]
@@ -237,7 +240,7 @@ theorem twp_func0_call_exact [WasmSmallStepGS hlc Universal.State]
         · omega
         · exact oldCapacity.toBitVec.isLt
       wasm_twp_pures [twp_localGet]
-      iapply twp_eqz (by rw [if_neg holdNonzero])
+      iapply twp_eqz (by rw [ite_eq_right holdNonzero])
       wasm_twp_pures [twp_brIfZero twp_localGet twp_localGet twp_localGet twp_mul]
       rw [show oldCapacity * (1 : UInt32) = oldCapacity by bv_normalize]
       wasm_twp_pures [twp_localGet twp_localGet]
@@ -500,7 +503,7 @@ theorem twp_func1_call_exact [WasmSmallStepGS hlc Universal.State]
   wasm_twp_localTee [List.set]
   wasm_twp_pures [twp_localGet]
   iapply twp_geU (result := 1) (by
-    rw [if_pos (by simpa only [← hsumWord] using hguard)])
+    rw [ite_eq_left (by simpa only [← hsumWord] using hguard)])
   iapply twp_brIf (by decide) (by rfl)
   simp only [List.take_zero, List.drop_zero, List.nil_append]
   wasm_twp_pures [twp_localGet twp_const twp_add] rewriting [UInt32.add_comm 4 reserveBase]
@@ -522,14 +525,14 @@ theorem twp_func1_call_exact [WasmSmallStepGS hlc Universal.State]
     by_cases hcmp : UInt32.ofNat (initialized.length + current.length) >
         UInt32.ofNat (2 * capacity.toNat)
     · have hw : UInt32.ofNat (initialized.length + current.length) =
-          UInt32.ofNat firstMaxNat := by simpa only [if_pos hcmp] using hfirstMaxWord
-      rw [if_pos hcmp,
-        if_pos (by decide : (1 : UInt32) ≠ 0)]
+          UInt32.ofNat firstMaxNat := by simpa only [ite_eq_left hcmp] using hfirstMaxWord
+      rw [ite_eq_left hcmp,
+        ite_eq_left (by decide : (1 : UInt32) ≠ 0)]
       exact congrArg Value.i32 hw.symm
     · have hw : UInt32.ofNat (2 * capacity.toNat) =
-          UInt32.ofNat firstMaxNat := by simpa only [if_neg hcmp] using hfirstMaxWord
-      rw [if_neg hcmp,
-        if_neg (by decide : ¬ ((0 : UInt32) ≠ 0))]
+          UInt32.ofNat firstMaxNat := by simpa only [ite_eq_right hcmp] using hfirstMaxWord
+      rw [ite_eq_right hcmp,
+        ite_eq_right (by decide : ¬ ((0 : UInt32) ≠ 0))]
       exact congrArg Value.i32 hw.symm)
   wasm_twp_localTee [List.set]
   wasm_twp_pures [twp_const twp_const twp_localGet twp_const twp_eq]

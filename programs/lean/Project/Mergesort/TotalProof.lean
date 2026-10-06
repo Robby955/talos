@@ -23,6 +23,9 @@ open Project.Mergesort.Adequacy
 open Project.Mergesort.AllocationBound
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- The exact body configuration selected by the semantic export initializer.
 It shares the canonical store with the call-site frontend in `Adequacy`. -/
 abbrev exportConfig (input : Spec.Input) : Config Universal.State :=

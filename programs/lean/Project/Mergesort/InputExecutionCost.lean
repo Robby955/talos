@@ -267,7 +267,7 @@ private theorem compose_iterations (total : Nat) (aux : Aux) (ctx : Context)
         have hcurrent := step.current
         omega
       have exitRun := eof_exit_cost step.store (stateLocals step.state aux) ctx
-      have joined := step.run.trans (by simpa only [if_pos hz] using exitRun)
+      have joined := step.run.trans (by simpa only [ite_eq_left hz] using exitRun)
       refine ⟨{
         store := step.store, state := step.state, trace := _, amount := step.amount + 1,
         run := joined, invariant := step.invariant, exhausted := hz,
@@ -282,7 +282,7 @@ private theorem compose_iterations (total : Nat) (aux : Aux) (ctx : Context)
         omega
       obtain ⟨tail⟩ := ih _ hsmall step.store step.state step.invariant hnext rfl
       have again := continue_cost step.store (stateLocals step.state aux) ctx
-      have joined := (step.run.trans (by simpa only [if_neg hz] using again)).trans tail.run
+      have joined := (step.run.trans (by simpa only [ite_eq_right hz] using again)).trans tail.run
       refine ⟨{
         store := tail.store, state := tail.state, trace := _, amount := step.amount + 2 + tail.amount,
         run := joined, invariant := tail.invariant, exhausted := tail.exhausted,

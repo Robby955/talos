@@ -92,7 +92,7 @@ theorem after_read_reserve_cost (input : List UInt8)
   have hcapacityNat := outputCapacity_toNat input hne hfit
   have hfinish : (allocatorBase bump).toNat + (outputCapacity input).toNat < 2147483648 := by
     rw [hbump] at hfrontier
-    simp only [allocatorBase, if_neg hbumpNe]
+    simp only [allocatorBase, ite_eq_right hbumpNe]
     rw [hcapacityNat]
     dsimp only [InputFits, completeFrontierBound] at hfit
     omega

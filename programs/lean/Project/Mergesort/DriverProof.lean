@@ -21,6 +21,9 @@ open Project.Mergesort.Representations
 open Project.Mergesort.MemoryBounds
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- The first instruction after the generated stack/Vec initialization. -/
 def func3AfterInit : Program :=
   Project.Mergesort.func3.drop 21

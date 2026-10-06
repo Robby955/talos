@@ -255,7 +255,7 @@ theorem reserved_facts (input : List UInt8) (store : MachineStore Universal.Stat
     change allocStore.wasm.mem.pages = _
     dsimp only [allocStore, OutputAllocationCost.allocatedStore]
     rw [ReserveResourceCost.allocationStore_pages]
-    simp only [allocatorBase, if_neg hinputBumpNe]
+    simp only [allocatorBase, ite_eq_right hinputBumpNe]
     rfl
   have pageBound : finalStore.wasm.mem.pages ≤ max store.wasm.mem.pages
       (AllocatorResourceCost.requiredPages (completeFrontierBound input.length)) := by

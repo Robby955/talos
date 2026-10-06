@@ -82,7 +82,7 @@ theorem copy_read32_disjoint (memory : Mem) (destination source count : Nat) (ad
   have h1 : ¬ (destination ≤ address.toNat + 1 ∧ address.toNat + 1 < destination + count) := by omega
   have h2 : ¬ (destination ≤ address.toNat + 2 ∧ address.toNat + 2 < destination + count) := by omega
   have h3 : ¬ (destination ≤ address.toNat + 3 ∧ address.toNat + 3 < destination + count) := by omega
-  simp only [Mem.read32, Mem.copy, if_neg h0, if_neg h1, if_neg h2, if_neg h3]
+  simp only [Mem.read32, Mem.copy, ite_eq_right h0, ite_eq_right h1, ite_eq_right h2, ite_eq_right h3]
 
 theorem writeBytes_read32_disjoint (memory : Mem) (destination : Nat) (bytes : List UInt8)
     (address : UInt32)
@@ -92,7 +92,7 @@ theorem writeBytes_read32_disjoint (memory : Mem) (destination : Nat) (bytes : L
   have h1 : ¬ (destination ≤ address.toNat + 1 ∧ address.toNat + 1 < destination + bytes.length) := by omega
   have h2 : ¬ (destination ≤ address.toNat + 2 ∧ address.toNat + 2 < destination + bytes.length) := by omega
   have h3 : ¬ (destination ≤ address.toNat + 3 ∧ address.toNat + 3 < destination + bytes.length) := by omega
-  simp only [Mem.read32, Mem.writeBytes, dif_neg h0, dif_neg h1, dif_neg h2, dif_neg h3]
+  simp only [Mem.read32, Mem.writeBytes, dite_eq_right h0, dite_eq_right h1, dite_eq_right h2, dite_eq_right h3]
 
 theorem appendedStore_pages (store : MachineStore Universal.State) (dataPtr : UInt32)
     (length current : Nat) :
@@ -222,7 +222,7 @@ theorem reserve_history_exists {total : Nat} {store : MachineStore Universal.Sta
         rw [← hp, UInt32.ofNat_toNat]
       refine ⟨v.history.reallocate (exponent - 8) v.dataPtr
         { size := v.capacity.toNat, alignment := 1 } newPtr layout, ?_⟩
-      rw [VecReserveHistory, if_neg hz]
+      rw [VecReserveHistory, ite_eq_right hz]
       refine ⟨exponent - 8, ?_, rfl⟩
       rw [hh, hpword, hcap]
       exact geometricHistory_live_lookup exponent hlo

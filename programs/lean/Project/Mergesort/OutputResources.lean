@@ -11,6 +11,9 @@ open Iris Iris.ProgramLogic Language.Notation Std
 open Project.Mergesort.Representations
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 /-- The existing array ownership determines the physical word view. -/
 theorem arrayAt_readWords32 [WasmSmallStepGS hlc Universal.State]
     (store : MachineStore Universal.State) (steps : Nat)

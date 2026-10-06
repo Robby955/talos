@@ -127,7 +127,7 @@ theorem left_choice_cost (store : MachineStore α) (v : ChoiceState) (ctx : Cont
       (.load32 rfl (by simpa [rightAddress] using hright)), (.localTee rfl),
       (.leU (result := 1) (by simpa [leftAddress, rightAddress] using
         (show (1 : UInt32) = if store.wasm.mem.read32 (leftAddress v + 0) ≤
-          store.wasm.mem.read32 (rightAddress v + 0) then 1 else 0 by rw [if_pos hle]))),
+          store.wasm.mem.read32 (rightAddress v + 0) then 1 else 0 by rw [ite_eq_left hle]))),
       (.brIf (by decide) rfl), .block]
     wasm_steps [(.localGet rfl), (.localGet rfl),
       (.geU (result := 0) (by simp [UInt32.not_le.mpr hroom])), .brIfZero]
@@ -169,7 +169,7 @@ theorem right_choice_cost (store : MachineStore α) (v : ChoiceState) (ctx : Con
       (.load32 rfl (by simpa [rightAddress] using hright)), (.localTee rfl),
       (.leU (result := 0) (by simpa [leftAddress, rightAddress] using
         (show (0 : UInt32) = if store.wasm.mem.read32 (leftAddress v + 0) ≤
-          store.wasm.mem.read32 (rightAddress v + 0) then 1 else 0 by rw [if_neg hle]))),
+          store.wasm.mem.read32 (rightAddress v + 0) then 1 else 0 by rw [ite_eq_right hle]))),
       .brIfZero]
     wasm_steps [(.localGet rfl), (.localGet rfl),
       (.geU (result := 0) (by simp [UInt32.not_le.mpr hroom])), .brIfZero]

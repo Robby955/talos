@@ -74,7 +74,7 @@ theorem read_chunk_after_read_fits_cost
   apply ReadCostRun.prepend (Step.localTee rfl) rfl (by trivial)
   apply ReadCostRun.prepend Step.const rfl (by trivial)
   apply ReadCostRun.prepend (Step.geU (result := 0) (by
-    simp only [if_neg (UInt32.not_le.mpr hcountLt)])) rfl (by trivial)
+    simp only [ite_eq_right (UInt32.not_le.mpr hcountLt)])) rfl (by trivial)
   apply ReadCostRun.prepend Step.brIfZero rfl (by trivial)
   apply ReadCostRun.prepend Step.block rfl (by trivial)
   apply ReadCostRun.prepend Step.block rfl (by trivial)
@@ -427,7 +427,7 @@ theorem read_chunk_after_read_reserve_cost
   apply ChunkCostOutcome.prepend (Step.localTee rfl) rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.const rfl (by trivial)
   apply ChunkCostOutcome.prepend (Step.geU (result := 0) (by
-    simp only [if_neg (UInt32.not_le.mpr hcountLt)])) rfl (by trivial)
+    simp only [ite_eq_right (UInt32.not_le.mpr hcountLt)])) rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.brIfZero rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.block rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.block rfl (by trivial)
@@ -486,9 +486,9 @@ theorem read_chunk_after_read_reserve_cost
   apply ChunkCostOutcome.prepend Step.const rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.add rfl (by trivial)
   apply ChunkCostOutcome.prepend (Step.localGet rfl) rfl (by trivial)
-  rw [show 8 + frame = frame + 8 by bv_normalize (config := { enums := false }),
+  rw [show 8 + frame = frame + 8 from UInt32.add_comm _ _,
     show length + allocatorPtr oldBump 1 =
-      allocatorPtr oldBump 1 + length by bv_normalize (config := { enums := false })]
+      allocatorPtr oldBump 1 + length from UInt32.add_comm _ _]
   apply ChunkCostOutcome.prepend_bulk (bulk := count.toNat) (bytes := 0) (by
     simpa only [setMemory_eq] using
       (Step.memoryCopy32 hdestBound hsourceBound)) rfl (by trivial)
@@ -520,7 +520,7 @@ theorem read_chunk_after_read_reserve_cost
   apply ChunkCostOutcome.prepend (Step.localGet rfl) rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.const rfl (by trivial)
   apply ChunkCostOutcome.prepend Step.add rfl (by trivial)
-  rw [show 48 + frame = frame + 48 by bv_normalize (config := { enums := false })]
+  rw [show 48 + frame = frame + 48 from UInt32.add_comm _ _]
   apply ChunkCostOutcome.prepend (Step.globalSet (by
     simpa [reserved, globalAt?] using hreservedGlobal)) rfl (by trivial)
   rw [setGlobal_zero_eq]
@@ -659,7 +659,7 @@ theorem first_chunk_after_read_cost
   have hframe48 : (1048464:UInt32)+48=1048512 := by decide
   have hframe8 : (1048464:UInt32)+8=1048472 := by decide
   by_cases hempty : bytes = []
-  · simp only [if_pos hempty]
+  · simp only [ite_eq_left hempty]
     have hcountZero : count = 0 := by simp [count, hempty]
     have hsuffix := read_chunk_after_read_eof_cost after outerParams
       outerLocalValues stack code arity remainder controls calls
@@ -673,7 +673,7 @@ theorem first_chunk_after_read_cost
     simpa only [after,readChunkAfterReadConfig,readChunkCalls,readChunkCallerFrame,
       firstChunkFrame,firstChunkResult,firstChunkBuffer,readToEndResult,readToEndVector,readToEndIgnored,
       hempty,List.length_nil,hframe48] using hsuffix
-  · simp only [if_neg hempty]
+  · simp only [ite_eq_right hempty]
     have hcountNe : count ≠ 0 := by
       intro hz
       have : count.toNat = 0 := congrArg UInt32.toNat hz

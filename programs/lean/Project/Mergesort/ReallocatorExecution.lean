@@ -113,7 +113,7 @@ private theorem growth_steps
   by_cases hneed : store.wasm.mem.pages < (allocatorRequiredPages finish).toNat
   · have hnotFits : ¬ allocatorRequiredPages finish ≤ store.wasm.mem.pages.toUInt32 := by
       rw [UInt32.le_iff_toNat_le_toNat, hpagesNat]; omega
-    simp only [if_pos hneed]
+    simp only [ite_eq_left hneed]
     apply Steps.cons (Step.leU (result := 0) (by simp [hnotFits]))
     apply Steps.cons Step.brIfZero
     apply Steps.cons (Step.localGet (by rfl))
@@ -139,7 +139,7 @@ private theorem growth_steps
     exact Steps.refl _
   · have hfits : allocatorRequiredPages finish ≤ store.wasm.mem.pages.toUInt32 := by
       rw [UInt32.le_iff_toNat_le_toNat, hpagesNat]; omega
-    simp only [if_neg hneed]
+    simp only [ite_eq_right hneed]
     apply Steps.cons (Step.leU (result := 1) (by simp [hfits]))
     apply Steps.cons (Step.brIf (by decide) (by rfl))
     simp only [AllocatorExecution.grownMemory, max_eq_left (Nat.le_of_not_gt hneed),
@@ -228,7 +228,7 @@ private theorem arithmetic_prefix_steps
   rw [hsumWord]
   apply Steps.cons (Step.localTee (by rfl))
   apply Steps.cons (Step.localGet (by rfl))
-  apply Steps.cons (Step.ltU (result := 0) (by simp only [if_neg hsumNotLt]))
+  apply Steps.cons (Step.ltU (result := 0) (by simp only [ite_eq_right hsumNotLt]))
   apply Steps.cons Step.brIfZero
   apply Steps.cons (Step.localGet (by rfl))
   apply Steps.cons Step.const
@@ -246,7 +246,7 @@ private theorem arithmetic_prefix_steps
   apply Steps.cons Step.brIfZero
   apply Steps.cons (Step.localGet (by rfl))
   apply Steps.cons Step.const
-  apply Steps.cons (Step.ltS (result := 0) (by rw [if_neg hnonnegative]))
+  apply Steps.cons (Step.ltS (result := 0) (by rw [ite_eq_right hnonnegative]))
   apply Steps.cons Step.brIfZero
   simp only [outerFrame, outerBody,
     List.set, List.length, Nat.reduceAdd, Nat.reduceSub,

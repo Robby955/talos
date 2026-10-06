@@ -89,9 +89,9 @@ theorem Result.prepend_read {input remaining bytes : List UInt8}
   apply Result.prepend execution labels (by rw [pages]; exact Nat.le_max_left _ _) _ suffix
   rw [pages, List.length_drop]
   by_cases hempty : bytes = []
-  · simp only [hempty, List.length_nil, if_pos, Nat.sub_zero]
+  · simp only [hempty, List.length_nil, ite_eq_left, Nat.sub_zero]
     omega
-  · simp only [if_neg hempty]
+  · simp only [ite_eq_right hempty]
     have hb := List.length_pos_iff.mpr hempty
     omega
 
@@ -263,7 +263,7 @@ theorem after_read_cost
     have hsuffix := return_cost input readStore chunk capacity data length filled target count bump
       (length.toNat + target.toNat) hnewBounded hinitialized
     apply Result.prepend_scalar hreturn rfl _ hsuffix
-    simp only [hempty, if_pos, hremainingNil, List.length_nil, List.drop_nil]
+    simp only [hempty, ite_eq_left, hremainingNil, List.length_nil, List.drop_nil]
     omega
 
   · have hcountNe : count ≠ 0 := by
@@ -320,7 +320,7 @@ theorem after_read_cost
         (nextInitialized := (length + count).toNat + (target - count).toNat)
         (nextUnread := (remaining.drop bytes.length).length) (nextSlack := 512)
         hreach rfl ?_ ?_
-      · simp only [if_neg hempty]
+      · simp only [ite_eq_right hempty]
         omega
       · simpa only [encodeReadContinuedConfig, hupdated] using hsuffix
     · by_cases hpartial : target ≠ count
@@ -336,7 +336,7 @@ theorem after_read_cost
           (nextInitialized := (length + count).toNat + (target - count).toNat)
           (nextUnread := (remaining.drop bytes.length).length) (nextSlack := 512)
           hreach rfl ?_ ?_
-        · simp only [if_neg hempty]
+        · simp only [ite_eq_right hempty]
           omega
         · simpa only [encodeReadContinuedConfig, hupdated] using hsuffix
       · have hfull : target = count := not_ne_iff.mp hpartial
@@ -357,7 +357,7 @@ theorem after_read_cost
             (nextInitialized := (length + count).toNat + (target - count).toNat)
             (nextUnread := (remaining.drop bytes.length).length) (nextSlack := 512)
             hreach rfl ?_ ?_
-          · simp only [if_neg hempty]
+          · simp only [ite_eq_right hempty]
             omega
           · simpa only [encodeReadContinuedConfig, hupdated, hfilledZero] using hsuffix
         · have hreach := read_to_end_after_read_full_double_steps_trace readStore []
@@ -376,7 +376,7 @@ theorem after_read_cost
             (nextInitialized := (length + count).toNat + (target - count).toNat)
             (nextUnread := (remaining.drop bytes.length).length) (nextSlack := 512)
             hreach rfl ?_ ?_
-          · simp only [if_neg hempty]
+          · simp only [ite_eq_right hempty]
             omega
           · simpa only [encodeReadContinuedConfig, hupdated, hfilledZero] using hsuffix
 
@@ -709,7 +709,7 @@ theorem growth_cost (input consumed remaining : List UInt8)
     rw [ReserveResourceCost.allocationStore_pages, hbase, hinv.finish_toNat]
   refine ⟨front ++ tail, ?_, ?_, ?_, hgrown, pages⟩
   · simp only [List.length_append, tailLength]
-    simp only [if_neg hcapNe] at frontLength
+    simp only [ite_eq_right hcapNe] at frontLength
     omega
   · have complete := first.trans tailRun
     convert complete using 1

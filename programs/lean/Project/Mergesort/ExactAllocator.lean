@@ -19,6 +19,9 @@ open Iris Iris.ProgramLogic Language.Notation Std
 open Project.Mergesort.Contracts Project.Mergesort.Representations
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 private theorem half_snapshot [WasmMemoryPagesGS Universal.State] (pages : Nat) :
     memoryPagesHalf (α := Universal.State) pages ⊢ memoryPagesOwn pages :=
   pagesAuthorityFrac_snapshot (1 : Qp).half pages
@@ -103,7 +106,7 @@ theorem twp_func5_call_exact [WasmSmallStepGS hlc Universal.State]
       simpa only [hpagesWord] using UInt32.le_iff_toNat_le_toNat.mp hcovered
     have hphysical : finish.toNat ≤ pages * 65536 :=
       hrequiredCovers.trans (Nat.mul_le_mul_right 65536 hle)
-    iapply twp_leU (result := 1) (by rw [if_pos hcovered])
+    iapply twp_leU (result := 1) (by rw [ite_eq_left hcovered])
     iapply twp_brIf (by decide) (by rfl)
     simp only [List.take_zero, List.nil_append]
     ihave #Hpages := half_snapshot pages $$ Hexact
@@ -129,7 +132,7 @@ theorem twp_func5_call_exact [WasmSmallStepGS hlc Universal.State]
     have hnew : pages + delta.toNat = (allocatorRequiredPages finish).toNat := by
       rw [hdelta]
       omega
-    iapply twp_leU (result := 0) (by rw [if_neg hcovered])
+    iapply twp_leU (result := 0) (by rw [ite_eq_right hcovered])
     wasm_twp_pures [twp_brIfZero twp_localGet twp_localGet twp_sub]
     ihave HgrowFrame : iprop(
         hostEnvOwn 0 (Universal.envFor Project.Mergesort.module) ∗
@@ -247,7 +250,7 @@ theorem twp_func9_call_exact [WasmSmallStepGS hlc Universal.State]
       simpa only [hpagesWord] using UInt32.le_iff_toNat_le_toNat.mp hcovered
     have hphysical : finish.toNat ≤ pages * 65536 :=
       hrequiredCovers.trans (Nat.mul_le_mul_right 65536 hle)
-    iapply twp_leU (result := 1) (by rw [if_pos hcovered])
+    iapply twp_leU (result := 1) (by rw [ite_eq_left hcovered])
     iapply twp_brIf (by decide) (by rfl)
     simp only [List.take_zero, List.nil_append]
     ihave #Hpages := half_snapshot pages $$ Hexact
@@ -281,7 +284,7 @@ theorem twp_func9_call_exact [WasmSmallStepGS hlc Universal.State]
     have hnew : pages + delta.toNat = (allocatorRequiredPages finish).toNat := by
       rw [hdelta]
       omega
-    iapply twp_leU (result := 0) (by rw [if_neg hcovered])
+    iapply twp_leU (result := 0) (by rw [ite_eq_right hcovered])
     wasm_twp_pures [twp_brIfZero twp_localGet twp_localGet twp_sub]
     ihave HgrowFrame : iprop(
         hostEnvOwn 0 (Universal.envFor Project.Mergesort.module) ∗
@@ -417,7 +420,7 @@ theorem twp_func8_call_exact [WasmSmallStepGS hlc Universal.State]
       simpa only [hpagesWord] using UInt32.le_iff_toNat_le_toNat.mp hcovered
     have hphysical : finish.toNat ≤ pages * 65536 :=
       hrequiredCovers.trans (Nat.mul_le_mul_right 65536 hle)
-    iapply twp_leU (result := 1) (by rw [if_pos hcovered])
+    iapply twp_leU (result := 1) (by rw [ite_eq_left hcovered])
     iapply twp_brIf (by decide) (by rfl)
     simp only [List.take_zero, List.nil_append]
     ihave #Hpages := half_snapshot pages $$ Hexact
@@ -454,7 +457,7 @@ theorem twp_func8_call_exact [WasmSmallStepGS hlc Universal.State]
     have hnew : pages + delta.toNat = (allocatorRequiredPages finish).toNat := by
       rw [hdelta]
       omega
-    iapply twp_leU (result := 0) (by rw [if_neg hcovered])
+    iapply twp_leU (result := 0) (by rw [ite_eq_right hcovered])
     wasm_twp_pures [twp_brIfZero twp_localGet twp_localGet twp_sub]
     ihave HgrowFrame : iprop(
         hostEnvOwn 0 (Universal.envFor Project.Mergesort.module) ∗

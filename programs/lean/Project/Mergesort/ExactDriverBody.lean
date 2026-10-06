@@ -17,6 +17,9 @@ open Project.Mergesort.DriverProof Project.Mergesort.MemoryBounds
 open Project.Mergesort.ExactReadLoop Project.Mergesort.ExactWorkAllocators
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 theorem read_dispatch_nonempty
     [WasmSmallStepGS hlc Universal.State]
     (heapId : GName) (original : List UInt32)

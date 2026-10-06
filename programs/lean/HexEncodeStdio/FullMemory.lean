@@ -1,5 +1,4 @@
 import CodeLib
-import HexEncodeStdio.TotalAdequacy
 import HexEncodeStdio.Grow
 import HexEncodeStdio.Helpers
 
@@ -290,7 +289,7 @@ theorem bytesAt_four (mem : Mem) (addr : UInt32)
     Project.HexEncodeStdio.Grow.bytesAt mem addr 4 =
       [u32Byte (mem.read32 addr) 0, u32Byte (mem.read32 addr) 1,
        u32Byte (mem.read32 addr) 2, u32Byte (mem.read32 addr) 3] := by
-  obtain ⟨_, h1, h2, h3⟩ := Project.HexEncodeStdio.Helpers.wordAccessFacts addr 0 hfit
+  obtain ⟨_, h1, h2, h3⟩ := Wasm.SepLogic.wordAccessFacts addr 0 hfit
   have h1' : (addr + 1).toNat = addr.toNat + 1 := by simpa using h1
   have h2' : (addr + 2).toNat = addr.toNat + 2 := by simpa using h2
   have h3' : (addr + 3).toNat = addr.toNat + 3 := by simpa using h3
@@ -375,7 +374,7 @@ theorem terminates
             stateInterp (GF := WasmHeapGF α) store 0 [] 0 -∗
             ⌜post values store⌝ }]) :
     TerminatesWith config post := by
-  apply Wasm.SmallStep.heap_globals_runtime_host_store_terminates
+  apply wasm_smallStep_heap_globals_runtime_host_store_terminates
     config (heap config.store) globalσ post
   · exact heap_agrees config.store hpages
   · exact heap_inBounds config.store hpages

@@ -24,6 +24,9 @@ open Wasm.SepLogic Wasm.SmallStep
 open Project.Mergesort.Representations
 open scoped Wasm.SmallStep.Outcome
 
+-- Unfold the definitionally equal generic/outcome Iris instances when matching WPs.
+set_option backward.isDefEq.respectTransparency false
+
 abbrev HeapIProp := IProp (WasmHeapGF Universal.State)
 
 /-- Persistent physical facts used by the tracked allocator contracts. -/

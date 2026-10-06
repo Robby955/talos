@@ -120,7 +120,7 @@ theorem iteration_continue_cost (store : MachineStore α) (v : State) (ctx : Con
         (head (written store v) (next v) ctx) 23 := by
   obtain ⟨hlength, pre⟩ := iteration_prefix_cost store v ctx hguard hsource
     hdestination hostBytes
-  simp only [if_pos hcontinue] at pre
+  simp only [ite_eq_left hcontinue] at pre
   have branch : CostedSteps (byteWork hostBytes) (beforeBranch store v ctx 1)
       [.instruction (.br_if 0)] (head (written store v) (next v) ctx) 1 :=
     CostedSteps.single (.brIf (by decide) rfl)
@@ -139,7 +139,7 @@ theorem iteration_final_branch_cost (store : MachineStore α) (v : State) (ctx :
           loopFrame ctx :: ctx.controls, ctx.calls⟩, written store v⟩ 23 := by
   obtain ⟨hlength, pre⟩ := iteration_prefix_cost store v ctx hguard hsource
     hdestination hostBytes
-  simp only [hstop, ne_eq, not_true_eq_false, if_false] at pre
+  simp only [hstop, ne_eq, not_true_eq_false, ite_false] at pre
   have branch : CostedSteps (byteWork hostBytes) (beforeBranch store v ctx 0)
       [.instruction (.br_if 0)]
       ⟨.running ⟨locals (next v) ctx.stack, [], ctx.arity, ctx.remainder,

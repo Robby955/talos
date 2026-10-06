@@ -99,7 +99,7 @@ private theorem grow_prefix (store : MachineStore α)
     rw [wrap64To32_eq]
     simp only [UInt64.ofNat_uInt32ToNat, UInt32.toNat_toUInt64, UInt32.ofNat_mod_size, UInt32.ofNat_toNat]
     wasm_steps [(.localTee rfl), .const, (.localGet rfl), .sub,
-      (.leU (result := 1) (by rw [if_pos hguard])), (.brIf (by decide) rfl),
+      (.leU (result := 1) (by rw [ite_eq_left hguard])), (.brIf (by decide) rfl),
       .block, .block, .block, .block]
     exact Steps.refl _
   · intro before kind after member
@@ -335,7 +335,7 @@ theorem grow_call_byteWork (store : MachineStore α)
       (hresult.trans (Nat.mul_le_mul_right 65536 (Nat.le_max_left _ _))) hostBytes
     refine ⟨((startTrace ++ (reallocate.take 9).map StepKind.instruction) ++ allocationTrace) ++
       [.instruction (.localSet 7), .instruction (.br 1)] ++ successTrace, ?_, ?_⟩
-    · simp only [if_neg hzero, List.length_append, hprefixLength]
+    · simp only [ite_eq_right hzero, List.length_append, hprefixLength]
       change 31 + 9 + allocationTrace.length + 2 + 20 ≤ 137
       omega
     · have run := (((hprefix.trans first).trans allocationRun).trans joined).trans tail
@@ -432,7 +432,7 @@ private theorem reserve_prefix (store : MachineStore α)
     rw [setGlobal_zero_eq]
     wasm_steps [.block, (.localGet rfl), (.localGet rfl), .add]
     rw [hsumWord]
-    wasm_steps [(.localTee rfl), (.localGet rfl), (.geU (result := 1) (by rw [if_pos hguard])),
+    wasm_steps [(.localTee rfl), (.localGet rfl), (.geU (result := 1) (by rw [ite_eq_left hguard])),
       (.brIf (by decide) rfl), (.localGet rfl), .const, .add]
     rw [UInt32.add_comm 4 reserveBase]
     wasm_steps [(.localGet rfl)]
